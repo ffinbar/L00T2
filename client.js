@@ -33,7 +33,7 @@ composer.addPass(renderPass);
 
 var bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
 composer.addPass(bloomPass);
-bloomPass.radius = 1;
+// bloomPass.radius = 1;
 bloomPass.threshold = 1;
 
 var outlinePass = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
@@ -41,23 +41,21 @@ composer.addPass(outlinePass);
 outlinePass.edgeStrength = 5;
 outlinePass.edgeGlow = 1;
 
+var itemOutline = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
+composer.addPass(itemOutline);
+itemOutline.edgeStrength = 5;
+itemOutline.edgeGlow = 1;
+itemOutline.visibleEdgeColor = new THREE.Color(0xffaa00);
+
 var camLight = new THREE.PointLight(0xffffff, 20, 1000);
 camLight.position.set(camera.position.x, camera.position.y, camera.position.z); 
 camera.add(camLight); 
 scene.add(camera); 
 
+var chest;
+var time = 0;
 
 
-var area = new THREE.RectAreaLight(0xffffff, .5, 1.5, .75);
-area.intensity = 5;
-area.position.set(0, -.1, 0);
-area.rotation.set(Math.PI / 2, 0, 0);
-scene.add(area);
-var areaFlipped = new THREE.RectAreaLight(0xffffff, .5, 1.5, .75);
-areaFlipped.intensity = 3;
-areaFlipped.position.set(0, 0, 0);
-areaFlipped.rotation.set(Math.PI / -2, 0, 0);
-scene.add(areaFlipped);
 
 var titleArea = new THREE.RectAreaLight(0xffffff, .5, 3, .75);
 titleArea.intensity = 3;
@@ -65,8 +63,7 @@ titleArea.position.set(0, 1, -5);
 titleArea.rotation.set(160, 0, 0);
 camera.add(titleArea);
 
-var helper = new RectAreaLightHelper(titleArea);
-// scene.add(helper);
+
 
 
 var controls = new OrbitControls(camera, renderer.domElement);
@@ -74,18 +71,46 @@ controls.enablePan = false;
 
 var loader = new GLTFLoader();
 loader.load('assets/chest/chest.glb', function (gltf) {
-    var chest = gltf.scene;
+    chest = gltf.scene;
     chest.scale.set(2, 2, 2);
     chest.rotation.y = Math.PI / -2;
     scene.add(chest);
-    controls.target.copy(chest.position);
+    var area = new THREE.RectAreaLight(0xffffff, .5, 1.5, .75);
+    area.intensity = 5;
+    area.position.set(0, -.1, 0);
+    area.rotation.set(Math.PI / 2, 0, Math.PI / -2);
+    chest.add(area);
+    var areaFlipped = new THREE.RectAreaLight(0xffffff, .5, 1.5, .75);
+    areaFlipped.intensity = 3;
+    areaFlipped.position.set(0, 0, 0);
+    areaFlipped.rotation.set(Math.PI / -2, 0, Math.PI / -2);
+    chest.add(areaFlipped);
+
+    // var helper = new RectAreaLightHelper(area);
+    // scene.add(helper);
 });
 
 loader.load('assets/sworddisp.glb', function (gltf) {
     var sword = gltf.scene;
     sword.scale.set(2, 2, 2);
     sword.rotation.y = Math.PI / -2;
+    // sword.rotation.z = -10;
     scene.add(sword);
+    itemOutline.selectedObjects.push(sword);
+    controls.target.copy(sword.position);
+    sword.traverse(function (node) {
+        if (node.isMesh) {
+            node.renderOrder = 1000;
+            if (node.material.type === 'MeshStandardMaterial' || node.material.type === 'MeshPhongMaterial') {
+                node.material.emissive = new THREE.Color(0xffffff);
+                node.material.emissiveIntensity = 1.3;
+                node.material.emissiveMap = node.material.map; // Set the emissive map to the material's map
+            node.material.needsUpdate = true; // This is needed to update the material with the new emissive map
+       
+            }
+        }
+    });
+
 });
 
 loader.load('assets/l00t.glb', function (gltf) {
@@ -105,6 +130,8 @@ loader.load('assets/l00t.glb', function (gltf) {
         }
     });
 });
+
+
 
 var fontLoader = new FontLoader();
 var text;
@@ -146,7 +173,11 @@ fontLoader.load('assets/font/body.json', function (font) {
 var scaleHover = new THREE.Vector3(0.06, 0.06, 0.06);
 var scaleNormal = new THREE.Vector3(0.05, 0.05, 0.05);
 
+var clock = new THREE.Clock();
+
 function animate() {
+    var delta = clock.getDelta();
+
     requestAnimationFrame(animate);
     controls.update();
     renderer.render(scene, camera);
@@ -165,6 +196,14 @@ function animate() {
             text.scale.lerp(scaleNormal, 0.1); // Lerp to normal scale when mouse out
         }
     }
+    if (chest) {
+        var distance = camera.position.distanceTo(chest.position);
+        camLight.intensity = .8 * distance; // Adjust this formula as needed
+        // console.log(camLight.intensity);
+
+        time += .3 * delta; // Adjust this value to change the speed of the sine wave
+        chest.rotation.y = 30 + Math.sin(time) / 2;
+    }
 
     composer.render();
 }
@@ -172,8 +211,9 @@ animate();
 
 
 
-camera.position.z = 4.5;
-camera.position.y = 1;
+camera.position.z = 3;
+camera.position.y = .5;
+// camera.rotation.x = Math.PI / -4;
 
 
 window.addEventListener('click', function () {
