@@ -10,47 +10,47 @@ import { UnrealBloomPass } from 'https://cdn.jsdelivr.net/npm/three@0.162.0/exam
 import { OutlinePass } from 'https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/postprocessing/OutlinePass.js';
 import { FontLoader } from 'https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/geometries/TextGeometry.js';
-import { imageEdit } from './chat.js';
+// import { imageEdit } from './chat.js';
 
 let key = ''
 
-async function edit(imgObj, key) {
+// async function edit(imgObj, key) {
     
-    const result = await imageEdit(imgObj, key);
-    console.log(result.data[0].url);
-}
+//     const result = await imageEdit(imgObj, key);
+//     console.log(result.data[0].url);
+// }
 
-function convertImageToRGB(imageUrl) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = 'Anonymous'; // This enables CORS
-        img.onload = function() {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0, img.width, img.height);
-            canvas.toBlob(resolve, 'image/png'); // Convert the canvas to a Blob
-        };
-        img.onerror = reject;
-        img.src = imageUrl;
-    });
-}
+// function convertImageToRGB(imageUrl) {
+//     return new Promise((resolve, reject) => {
+//         const img = new Image();
+//         img.crossOrigin = 'Anonymous'; // This enables CORS
+//         img.onload = function() {
+//             const canvas = document.createElement('canvas');
+//             const ctx = canvas.getContext('2d');
+//             canvas.width = img.width;
+//             canvas.height = img.height;
+//             ctx.drawImage(img, 0, 0, img.width, img.height);
+//             canvas.toBlob(resolve, 'image/png'); // Convert the canvas to a Blob
+//         };
+//         img.onerror = reject;
+//         img.src = imageUrl;
+//     });
+// }
 
-document.getElementById('imageFile').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    const imageUrl = URL.createObjectURL(file);
-    convertImageToRGB(imageUrl)
-        .then(blob => {
-            let imgObj = {
-                image: blob,
-                prompt: 'The title "L00T". an rpg dnd title',
-                size: '256x256',
-            }
-            edit(imgObj, key);
-        })
-        .catch(console.error);
-});
+// document.getElementById('imageFile').addEventListener('change', function(e) {
+//     const file = e.target.files[0];
+//     const imageUrl = URL.createObjectURL(file);
+//     convertImageToRGB(imageUrl)
+//         .then(blob => {
+//             let imgObj = {
+//                 image: blob,
+//                 prompt: 'The title "L00T". an rpg dnd title',
+//                 size: '256x256',
+//             }
+//             edit(imgObj, key);
+//         })
+//         .catch(console.error);
+// });
 
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -134,7 +134,7 @@ loader.load('assets/chest/chest.glb', function (gltf) {
     // scene.add(helper);
 });
 
-loader.load('assets/sworddisp2.glb', function (gltf) {
+loader.load('assets/sworddisp.glb', function (gltf) {
     var sword = gltf.scene;
     sword.scale.set(2, 2, 2);
     sword.rotation.y = Math.PI / -2;

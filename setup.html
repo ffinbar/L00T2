@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My first three.js app</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body { 
+        margin: 0;
+        font-family: Arial, sans-serif;
+        font-size: 1em;
+       }
+      canvas { display: block; }
+
+      button {
+        font-size: 1.2em;
+        padding: .5em;
+        border: none;
+        border-radius: 5px;
+        background: #f0f0f0;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      button.active {
+        background: #489cff;
+        color: white;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 1em;
+        font-size: 1em;
+        border: none;
+        border-radius: 5px;
+        background: #f0f0f0;
+        /* margin-bottom: 1em; */
+      }
+
+      /* input[type="range"] {
+        width: 100%;
+        padding: 1em;
+        font-size: 1.5em;
+        border: none;
+        border-radius: 5px;
+        background: #f0f0f0;
+        
+      } */
+
+      #fade-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: black;
+        opacity: 1;
+        pointer-events: none;
+        transition: all 1s;
+        z-index: 99;
+      }
+
+      #setupPagesContainer {
+        position: absolute;
+        width: 100%;
+        height: 60%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+      }
+
+      .setupPage {
+        
+        width: 80%;
+        max-width: 800px;
+        padding: 1em;
+        background: white;
+        border-radius: .5em;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+
+      .setupPage * {
+        margin: .2em;
+      }
+
+      #itemChoice {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+      }
+
+      .typechoice {
+        flex: 1;
+        /* padding: 1em; */
+        margin-bottom: 1em;
+      }
+
+      .typechoice button {
+        width: 100%;
+        padding: .5em 1em;
+        font-size: 1.3em;
+        border: none;
+        border-radius: 5px;
+        background: #f0f0f0;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .typechoice button.active {
+        background: #489cff;
+        color: white;
+      }
+
+      /* .typechoice button:hover {
+        background: #e0e0e0;
+      } */
+
+      .typechoice p {
+        margin: 0;
+      }
+
+      p {
+        font-size: 1em;
+        margin: 0;
+      }
+
+      @media (max-width: 600px) {
+        /* .setupPage {
+          top: 30%;
+        } */
+        #itemChoice {
+          flex-wrap: nowrap;
+        }
+      }
+
+      
+      
+    </style>
+    <script type="importmap">
+        {
+          "imports": {
+            "three": "https://unpkg.com/three@0.162.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.162.0/examples/jsm/"
+          }
+        }
+      </script>
+  </head>
+  <body>
+    <div id="fade-overlay"></div>
+    
+    <div id="setupPagesContainer">
+      <div class="setupPage"><p>L00T uses generative AI to create unique items.<br><br>You can customise as much or as little as you want to design a specific item, or let the AI surprise you.</p></div>
+
+      <div class="setupPage customPage">
+        <p>I want my item to be...</p>
+        <div id="itemChoice">
+          <div class="typechoice">
+            <button id="custom">Custom</button>
+            <p>You choose the type of item and its properties. You can still let the AI decide some things.</p>
+          </div>
+          <div class="typechoice">
+            <button id="random" class="active">A Surprise</button>
+            <p>Let the AI decide everything.</p>
+          </div>
+          <input type="hidden" id="genChoice" value="random">
+        </div>
+      </div>
+
+      <div class="setupPage">
+        <p>What is the name of your item?</p>
+        <input type="text" id="itemName" placeholder="Excalibur">
+        <button id="nameRandom" class="active">Surprise Me</button>
+        <input type="hidden" id="itemNameHidden" value="random">
+      </div>
+
+      <div class="setupPage">
+        <p>What type of item is it?</p>
+        <input type="text" id="itemType" placeholder="Sword">
+        <button id="typeRandom" class="active">Surprise Me</button>
+        <input type="hidden" id="itemTypeHidden" value="random">
+      </div>
+
+      <div class="setupPage">
+        <p>How rare is your item?</p>
+        <input type="text" id="rarity" placeholder="Legendary">
+        <button id="rarityRandom" class="active">Surprise Me</button>
+        <input type="hidden" id="rarityHidden" value="random">
+      </div>
+
+      <div class="setupPage">
+        <p>Describe any extra details or properties of your item. These could be magical effects, historical significance, or anything else you can think of. You can include visual details, but you can also leave that to the AI. The AI will use this description to help generate your item.</p>
+        <input type="text" id="description" placeholder="Once wielded by king...">
+        <button id="descriptionRandom" class="active">Surprise Me</button>
+        <input type="hidden" id="descriptionHidden" value="random">
+      </div>
+      <div class="setupPage imgPage">
+        <p>Give your item an image? You can AI-generate a portrait or upload your own.</p>
+
+      </div>
+    </div>
+    <input type="hidden" id="itemType" value="random">
+
+    <script>
+      const custom = document.getElementById('custom');
+      const random = document.getElementById('random');
+      const genChoice = document.getElementById('genChoice');
+      setColours();
+
+      function setColours() {
+        let activeBtn = genChoice.value === 'custom' ? custom : random;
+        let inactiveBtn = genChoice.value === 'custom' ? random : custom;
+        activeBtn.classList.add('active');
+        inactiveBtn.classList.remove('active');
+
+      }
+
+      custom.addEventListener('click', () => {
+        genChoice.value = 'custom';
+        setColours();
+        
+        
+      });
+
+      random.addEventListener('click', () => {
+        genChoice.value = 'random';
+        setColours();
+      });
+    </script>
+
+    <script type="module" src="setup.js"></script>
+  </body>
+</html>
