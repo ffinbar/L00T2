@@ -96,7 +96,7 @@ camera.add(camLight);
 scene.add(camera); 
 
 var chest;
-var time = 0;
+var time = 0.0;
 
 
 
