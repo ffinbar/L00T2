@@ -1,21 +1,31 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/loaders/GLTFLoader.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/controls/OrbitControls.js';
-import { RectAreaLightUniformsLib } from 'https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/lights/RectAreaLightUniformsLib.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/loaders/GLTFLoader.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/controls/OrbitControls.js';
+import { RectAreaLightUniformsLib } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/lights/RectAreaLightUniformsLib.js';
 RectAreaLightUniformsLib.init();
-import { RectAreaLightHelper } from 'https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/helpers/RectAreaLightHelper.js';
-import { EffectComposer } from 'https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { OutlinePass } from 'https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/postprocessing/OutlinePass.js';
-import { FontLoader } from 'https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/loaders/FontLoader.js';
-import { TextGeometry } from 'https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/geometries/TextGeometry.js';
-
+import { RectAreaLightHelper } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/helpers/RectAreaLightHelper.js';
+import { EffectComposer } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { OutlinePass } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/postprocessing/OutlinePass.js';
+import { FontLoader } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/loaders/FontLoader.js';
+import { TextGeometry } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/geometries/TextGeometry.js';
+import { OutputPass } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/postprocessing/OutputPass.js';
+import { chatCompletion } from './chat.js';
 
 let scene = new THREE.Scene();
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 // camera.position.z = 2;
 // camera.position.y = 1;
+
+window.onresize = function () {
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+
+};
 
 let raycaster = new THREE.Raycaster();
 let mouse = new THREE.Vector2();
@@ -28,6 +38,12 @@ window.addEventListener('mousemove', function (event) {
 let renderer = new THREE.WebGLRenderer();
 renderer.setClearColor(0x000000);
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.7;
+renderer.outputEncoding = THREE.sRGBEncoding;
 
 document.body.appendChild(renderer.domElement);
 
@@ -44,6 +60,10 @@ let outlinePass = new OutlinePass(new THREE.Vector2(window.innerWidth, window.in
 composer.addPass(outlinePass);
 outlinePass.edgeStrength = 5;
 outlinePass.edgeGlow = .2;
+
+let outputPass = new OutputPass();
+composer.addPass(outputPass);
+
 
 let itemOutline = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
 composer.addPass(itemOutline);
@@ -62,7 +82,7 @@ camera.target = new THREE.Vector3(0, 0, 0);
 
 let time = 0;
 
-
+let genChoice = document.getElementById('genChoice');
 
 
 // let controls = new OrbitControls(camera, renderer.domElement);
@@ -100,13 +120,13 @@ let fontLoader = new FontLoader();
 // let textBegin;
 // let textBack;
 
-function createButton(text, position, color, scale, onClick) {
+async function createButton(text, position, color, scale, onClick) {
     let button;
     fontLoader.load('assets/font/body.json', function (font) {
         let geometry = new TextGeometry(text, {
             font: font,
             size: 5,
-            height: 2,
+            depth: 2,
             curveSegments: 0,
             bevelEnabled: false,
         });
@@ -148,41 +168,170 @@ function createButton(text, position, color, scale, onClick) {
     return button;
 }
 
-let item = {
-    name: null,
+let apiKey = null;
 
+let item = {
+    name: 'null',
+    type: 'null',
+    rarity: 'null',
+    description: 'null',
 }
 
 let setupPage = 0;
 let pages = document.getElementsByClassName('setupPage');
-    for (let i = 0; i < pages.length; i++) {
-        pages[i].style.display = 'none';
-        if(i == setupPage) {
-            pages[i].style.display = 'block';
+for (let i = 0; i < pages.length; i++) {
+    pages[i].style.display = 'none';
+    if(i == setupPage) {
+        pages[i].style.display = 'block';
+    }
+}
+let lastPage = false;
+let pageOffset = 1;
+
+
+let textBegin = await createButton('Okay', new THREE.Vector3(0, -1, -3), 0x00dd00, 0.05, async function() {
+    let currPage = pages[setupPage];
+
+    lastPage = currPage == pages[(pages.length - 1) - pageOffset] ? true : false;
+
+    if(currPage.classList.contains('keyPage')) {
+        let apiKeyInput = document.getElementById('apiKeyInput');
+        let key = apiKeyInput.value;
+
+        if(key === undefined || key === null || key.trim() === '') {
+            console.log('Key is blank or undefined');
+            apiKeyInput.style.boxShadow = 'inset 0px 0px 0px 2px red';
+            apiKeyInput.placeholder = 'Please enter a valid key';
+            return;
+        } else {
+            console.log('Key:', key);
+            apiKeyInput.style.boxShadow = 'none';
+            apiKeyInput.placeholder = 'API Key';
+            apiKey = key;
         }
+
     }
 
-
-let textBegin = createButton('Okay', new THREE.Vector3(0, -1, -3), 0x00dd00, 0.05, function() {
-    let pages = document.getElementsByClassName('setupPage');
-    let currPage = pages[setupPage];
     if(currPage.classList.contains('customPage')) {
         let imgPage = Array.from(pages).find(page => page.classList.contains('imgPage'));
         console.log(imgPage);
-        let customCheckbox = currPage.querySelector('input[type="checkbox"]');
-        if(customCheckbox.checked) {
+        let currGenChoice = genChoice.value;
+        if(currGenChoice == 'random') {
             setupPage = Array.from(pages).indexOf(imgPage);
+            console.log(item);
         } else {
-            setupPage = (setupPage + 1) % pages.length;
+            setupPage = (setupPage + 1) % (pages.length -pageOffset);
         }
         
         
     } else {
     
 
-    setupPage = (setupPage + 1) % pages.length;
+        setupPage = (setupPage + 1) % (pages.length -pageOffset);
 
     }
+
+    if(currPage.querySelector('input')) {
+        let text = currPage.querySelector('input[type="text"]') ? currPage.querySelector('input[type="text"]').value : "blank";
+        let value = currPage.querySelector('input[type="hidden"]');
+
+        if(text != 'blank' && value.id != 'apiKey') {
+            if(text == '') {
+                text = 'null';
+            }
+
+            value.setAttribute('value', text);
+            let key = value.id;
+            item[key] = text;
+            console.log(text, item);
+        }
+
+
+    }
+
+    console.log(currPage);
+
+    if(lastPage) {
+        console.log('last page');
+        let overlay = document.getElementById('fade-overlay');
+        overlay.style.opacity = 1;
+        setTimeout(function() {
+            overlay.style.opacity = 0;
+        }, 5000);
+        let body = {
+            model: 'gpt-3.5-turbo',
+            messages: [
+                {
+                    role: 'user',
+                    content: `You are setting up a new item for the game. Your response will be in JSON formatting. You can only use the following fields. It must exactly match the following:
+                    {
+                        "name": "Excalibur",
+                        "type": "Sword",
+                        "rarity": "Legendary",
+                        "description": "A legendary sword that was once wielded by King Arthur."
+                    }`
+                },
+                {
+                    role: 'system',
+                    content: 'If any of the fields are listed as "null", it is your responsibility to fill in the missing information with a creative and appropriate response. Your response should be the finished item, with no fields listed as "null". Think of an entirely new item. It can be anything, from a sword to a potion to a slice of pizza.'
+                },
+                {
+                    role: 'user',
+                    content: `{
+                        "name": "Rock",
+                        "type": "null",
+                        "rarity": "Common",
+                        "description": "null"
+                    }`
+                },
+                {
+                    role: 'assistant',
+                    content: `
+                    {
+                        "name": "Rock",
+                        "type": "Object",
+                        "rarity": "Common",
+                        "description": "A simple yet sturdy rock found in the wild."
+                    }
+                    `
+                },
+                {
+                    role: 'user',
+                    content: 'The item is a ' + item.name + ' and is of type ' + item.type + '. The item is ' + item.rarity + ' and is described as ' + item.description + '. Do not leave any fields as "null".'
+                }
+            ],
+            response_format: { "type": "json_object" },
+            temperature: 1.3,
+            seed: Math.floor(Math.random() * 1000),
+        };
+        // let completion = await chatCompletion(body, apiKey);
+        // console.log(completion.choices[0].message.content);
+        // let response = JSON.parse(completion.choices[0].message.content);
+        // console.log(response);
+        overlay.style.opacity = 0;
+        pageOffset = 0;
+        
+
+        for (let i = 0; i < pages.length; i++) {
+            pages[i].style.display = 'none';
+            
+        }
+        pages = document.getElementsByClassName('itemPage');
+        
+        setupPage = 0;
+        currPage = pages[setupPage];
+        currPage.style.display = 'block';
+
+        return;
+
+    }
+
+    currPage = pages[setupPage];
+
+    lastPage = currPage == pages[(pages.length - 1) - pageOffset] ? true : false;
+
+    
+    
 
     for (let i = 0; i < pages.length; i++) {
         pages[i].style.display = 'none';
@@ -193,6 +342,8 @@ let textBegin = createButton('Okay', new THREE.Vector3(0, -1, -3), 0x00dd00, 0.0
     
     
 });
+
+
 let textBack = createButton('Back', new THREE.Vector3(0, -1.8, -3), 0xdd0000, 0.025, function() {
     if(setupPage == 0) {
 
@@ -207,10 +358,10 @@ let textBack = createButton('Back', new THREE.Vector3(0, -1.8, -3), 0xdd0000, 0.
 
     let pages = document.getElementsByClassName('setupPage');
     let currPage = pages[setupPage];
-    let customCheckbox = document.getElementById('customCheckbox');
+    
 
 
-    if(currPage.classList.contains('imgPage') && customCheckbox.checked) {
+    if(currPage.classList.contains('imgPage') && genChoice.value == 'random') {
         let customPage = Array.from(pages).find(page => page.classList.contains('customPage'));
         setupPage = Array.from(pages).indexOf(customPage);
        
