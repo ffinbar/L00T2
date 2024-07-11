@@ -77,6 +77,8 @@ camLight.position.set(camera.position.x, camera.position.y, camera.position.z);
 camera.add(camLight); 
 scene.add(camera); 
 
+camera.position.set(0, 1, 2);
+
 camera.target = new THREE.Vector3(0, 0, 0);
 
 
@@ -114,8 +116,6 @@ loader.load('assets/cardload.glb', function (gltf) {
     // controls.target = card.position;
     scene.add(card);
 });
-
-
 
 let fontLoader = new FontLoader();
 // let textBegin;
@@ -286,7 +286,8 @@ let pageOffset = 1;
 let shouldGenImg = false;
 let itemImg = null;
 
-let textBegin = await createButton('Okay', new THREE.Vector3(0, -1, -3), 0x00dd00, 0.05, async function() {
+let nextBtn = document.getElementById('next');
+nextBtn.addEventListener('click', async () => {
     let currPage = pages[setupPage];
 
     lastPage = currPage == pages[(pages.length - 1) - pageOffset] ? true : false;
@@ -533,15 +534,15 @@ function colorItems() {
 }
 
 
-let textBack = createButton('Back', new THREE.Vector3(0, -1.8, -3), 0xdd0000, 0.025, function() {
+let backBtn = document.getElementById('back');
+backBtn.addEventListener('click', () => {
     if(setupPage == 0) {
 
         let overlay = document.getElementById('fade-overlay');
-        overlay.style.opacity = 0;
-        console.log('back');
+        overlay.style.opacity = 1;
 
         setTimeout(function() {
-            // window.location.href = "./index.html";
+            window.location.href = "./index.html";
 
         }, 1000);
 
@@ -623,8 +624,8 @@ function animate() {
     if(card) {
         let distance = camera.position.distanceTo(card.position);
         camLight.intensity = 4 * distance; 
-        card.rotation.y += delta /2;
-        card.position.y = 2 + Math.sin(time) /4;
+        card.rotation.y += delta /4;
+        card.position.y = .5 + Math.sin(time*.4)*2;
         time += .6 * delta;
     }
 
@@ -658,14 +659,5 @@ window.addEventListener('click', function (event) {
         }
     }
 }, false);
-
-window.addEventListener('load', function() {
-    let overlay = document.getElementById('fade-overlay');
-    overlay.style.opacity = 0;
-
-    camera.position.set(0, 1, 4);
-    // shouldLerp = true;
-        
-});
 
 

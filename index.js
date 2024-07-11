@@ -13,8 +13,6 @@ import { TextGeometry } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/ge
 import { OutputPass } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/postprocessing/OutputPass.js';
 // import { imageEdit } from './chat.js';
 
-let key = ''
-
 // async function edit(imgObj, key) {
     
 //     const result = await imageEdit(imgObj, key);

@@ -142,14 +142,14 @@ backLight2.castShadow = true;
 // backLight2.intensity = 4;
 backLight2.position.set(-2, -2, -2);
 backLight2.lookAt(0, 0, 0);
-scene.add(backLight2);
+// scene.add(backLight2);
 
 let backLight3 = new THREE.SpotLight(0xffffff, 5, 10, 10, 0, 1);
 backLight3.castShadow = true;
 // backLight3.intensity = 4;
 backLight3.position.set(0, 0, -2);
 backLight3.lookAt(0, 0, 0);
-scene.add(backLight3);
+// scene.add(backLight3);
 
 
 let sideLight = new THREE.SpotLight(0xffffff, 5, 10, 10, 0, 1);
@@ -237,15 +237,19 @@ async function createCard() {
         roughness: 0.4,
     });
     // Create a slightly larger geometry for the border
-    let borderGeom = new RoundedBoxGeometry(card.content.contentSize.x + 0.6, card.content.contentSize.y + 0.6, .15, 2, 1); // Slightly larger and thicker
+    let borderGeom = new RoundedBoxGeometry(card.content.contentSize.x + 0.6, card.content.contentSize.y + 0.6, .01, 2, 1); // Slightly larger and thicker
     let border = new THREE.Mesh(borderGeom, borderMaterial);
     border.castShadow = false;
     border.receiveShadow = true;
     border.position.z = -0.05;
 
+    let backsideBackground = new THREE.Mesh(cardGeom, new THREE.MeshStandardMaterial({ color: 0x5f1e24, metalness: 1, roughness: 0.6 }));
+    backsideBackground.position.z = -0.01;
+
     let backgroundGroup = new THREE.Group();
     backgroundGroup.add(cardBackground);
     backgroundGroup.add(border);
+    backgroundGroup.add(backsideBackground);
     card.add(backgroundGroup);
 
     
@@ -499,6 +503,12 @@ let card = await createCard();
 
 scene.add(card);
 
+let cardFlip = true;
+
+let flip = document.getElementById('flip');
+flip.addEventListener('click', function() {
+    cardFlip = !cardFlip;
+});
 
 
 
@@ -596,7 +606,7 @@ function animate() {
         scrollY *= 0.5;
         camera.position.lerp(targetPosition, lerpFactor);
 
-        const targetEuler = new THREE.Euler(mouse.y /4, -mouse.x /4, 0, 'XYZ');
+        const targetEuler = new THREE.Euler(mouse.y /4, cardFlip ? -mouse.x /4 : Math.PI - mouse.x /4, 0, 'XYZ');
         const targetQuaternion = new THREE.Quaternion().setFromEuler(targetEuler);
         
         card.quaternion.slerp(targetQuaternion, lerpFactor);

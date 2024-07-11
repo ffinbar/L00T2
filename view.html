@@ -18,11 +18,127 @@
       </script>
   </head>
   <style>
-    body { margin: 0; }
+    body { 
+      margin: 0;
+      font-family: Arial, sans-serif;
+     }
     canvas { display: block; }
+    #flip, #back, #help {
+      position: fixed;
+      margin: 1em;
+      padding: 1em;
+      background: #e8eaed;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0.5;
+      transition: opacity 0.5s;
+      width: min-content;
+    }
+
+    #flip {
+      bottom: 0;
+      right: 0;
+    }
+
+    #back {
+      bottom: 0;
+      left: 0;
+    }
+
+    #help {
+      top: 0;
+      right: 0;
+    }
+
+    #flip:hover, #back:hover, #help:hover {
+      opacity: 1;
+    }
+
+    #help-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: black;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1s;
+    }
+
+    #help-overlay div {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 1em;
+      background: white;
+      border-radius: 1em;
+      max-width: 80%;
+      width: max-content;
+    }
+
+    #help-overlay h1 {
+      margin: 0;
+      padding: 0;
+    }
+
+    button {
+      padding: 1em;
+      background: #e8eaed;
+      border: none;
+      border-radius: 0.5em;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    button:hover {
+      background: #b6b8bb;
+    }
   </style>
   <body>
-    <div id="fade-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; opacity: 1; pointer-events: none; transition: opacity 1s;"></div>
+    <div id="fade-overlay" style="z-index: 999; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; opacity: 1; pointer-events: none; transition: opacity 1s;"></div>
     <script type="module" src="view.js"></script>
+    <button id="flip">
+      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-110h80v280H520v-80h168q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q77 0 139-44t87-116h84q-28 106-114 173t-196 67Z"/></svg>
+    </button>
+    <button id="back" onclick="location.href = '/setup.html';">
+      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="m313-440 224 224-57 56-320-320 320-320 57 56-224 224h487v80H313Z"/></svg>
+    </button>
+    <button id="help" onclick="document.getElementById('help-overlay').style.opacity = 1; document.getElementById('help-overlay').style.pointerEvents = 'auto';">
+      <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M424-320q0-81 14.5-116.5T500-514q41-36 62.5-62.5T584-637q0-41-27.5-68T480-732q-51 0-77.5 31T365-638l-103-44q21-64 77-111t141-47q105 0 161.5 58.5T698-641q0 50-21.5 85.5T609-475q-49 47-59.5 71.5T539-320H424Zm56 240q-33 0-56.5-23.5T400-160q0-33 23.5-56.5T480-240q33 0 56.5 23.5T560-160q0 33-23.5 56.5T480-80Z"/></svg>
+    </button>
+
+    <div id="help-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.596); opacity: 0; pointer-events: none; transition: opacity 1s;">
+      <div>
+        <h1>Controls</h1>
+        <p>Move the mouse/Touch and drag to move the camera.</p>
+        <p>Scroll/Pinch to zoom in and out.</p>
+        <p>Press the flip button to rotate the model 180 degrees.</p>
+        <p>Press the back button to make new L00T.</p>
+        <p>Press the help button to view these controls.</p>
+        <button id="close" style="margin-top: 1em;" onClick='closeHelp()'>Close</button>
+      </div>
   </body>
+  <script>
+    window.onload = function() {
+      if(sessionStorage.getItem('visited') === null) {
+        document.getElementById('help-overlay').style.opacity = 1;
+        document.getElementById('help-overlay').style.pointerEvents = 'auto';
+        sessionStorage.setItem('visited', 'true');
+      } else {
+        document.getElementById('help-overlay').style.opacity = 0;
+        document.getElementById('help-overlay').style.pointerEvents = 'none';
+      }
+    }
+
+    function closeHelp() {
+      document.getElementById('help-overlay').style.opacity = 0;
+      document.getElementById('help-overlay').style.pointerEvents = 'none';
+    }
+  </script>
 </html>

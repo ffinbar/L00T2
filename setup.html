@@ -161,7 +161,59 @@
       }
     }
 
-    
+    #buttons button {
+      position: fixed;
+      bottom: 10%;
+      width: min-content;
+      padding: 1em;
+      font-size: 1.5em;
+      border: none;
+      border-radius: 50%;
+      background: #6a6a6a;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0.8;
+    }
+
+    #buttons button:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
+    #next {
+      left: 60%;
+    }
+
+    #back {
+      right: 60%;
+    }
+
+    #back svg {
+      transform: rotate(180deg);
+    }
+
+    #backToLoot {
+      position: fixed;
+      top: 1em;
+      right: 1em;
+      left: 1em;
+      margin: auto;
+      padding: 1em;
+      font-size: 1em;
+      border: none;
+      border-radius: 5px;
+      background: #6a6a6a;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s;
+      width: fit-content;
+      opacity: 0.8;
+      display: none;
+    }
     
   </style>
   <style>
@@ -410,7 +462,36 @@
     </div>
     <input type="hidden" id="itemType" value="random">
 
+    <button id="backToLoot" onClick="window.location.href = 'view.html'">View My L00T</button>
+
+    <div id="buttons">
+      <button id="back">
+        <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#fff"><path d="m309.67-81.33-61-61.67L587-481.33 248.67-819.67l61-61.66 400 400-400 400Z"/></svg>
+      </button>
+      <button id="next">
+        <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#fff"><path d="m309.67-81.33-61-61.67L587-481.33 248.67-819.67l61-61.66 400 400-400 400Z"/></svg>
+      </button>
+    </div>
+
     <script>
+
+      window.onload = function() {
+          if(sessionStorage.getItem('visited') === null) {
+              sessionStorage.setItem('visited', 'true');
+              let overlay = document.getElementById('fade-overlay');
+              overlay.style.opacity = 0;
+          } else {
+              //reload page
+              sessionStorage.removeItem('visited');
+              window.location.reload();
+          }
+          if(localStorage.getItem('item') !== null) {
+            document.getElementById('backToLoot').style.display = 'block';
+          } else {
+            document.getElementById('backToLoot').style.display = 'none';
+          }
+      }
+
       const custom = document.getElementById('custom');
       const random = document.getElementById('random');
       const genChoice = document.getElementById('genChoice');
