@@ -60,8 +60,11 @@ window.onresize = function () {
     renderer.setSize( window.innerWidth, window.innerHeight );
 };
 
-let renderer = new THREE.WebGLRenderer();
-renderer.setClearColor(0x000000);
+scene.background = null;
+
+let renderer = new THREE.WebGLRenderer({ alpha: true });
+renderer.setClearColor(0x000000, 0);
+
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.shadowMap.enabled = true;
@@ -70,9 +73,11 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.7;
 renderer.outputEncoding = THREE.sRGBEncoding;
 
+
 document.body.appendChild(renderer.domElement);
 
 let composer = new EffectComposer(renderer);
+composer.setSize(window.innerWidth, window.innerHeight);
 let renderPass = new RenderPass(scene, camera);
 composer.addPass(renderPass);
 
@@ -195,11 +200,23 @@ camera.position.z = 6;
 
 let loader = new GLTFLoader();
 let l00t = null;
+// let floor = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: .7, roughness: 0.5 }));
+// floor.rotation.x = -Math.PI / 2;
+// console.log(floor.position.y);
+// floor.receiveShadow = true;
+// scene.add(floor);
 
+let borderMaterial;
 
 async function createCard() {
 
     let card = new THREE.Group();
+
+    borderMaterial = new THREE.MeshStandardMaterial({
+        color: item.rarityHex,
+        metalness: 1,
+        roughness: 0.4,
+    });
 
     card.content = await loadCardContent(card, item);
     console.log(item.imageObj);
@@ -231,26 +248,26 @@ async function createCard() {
     cardBackground.receiveShadow = true;
     cardBackground.castShadow = false;
 
-    let borderMaterial = new THREE.MeshStandardMaterial({
-        color: item.rarityHex,
-        metalness: 1,
-        roughness: 0.4,
-    });
     // Create a slightly larger geometry for the border
-    let borderGeom = new RoundedBoxGeometry(card.content.contentSize.x + 0.6, card.content.contentSize.y + 0.6, .01, 2, 1); // Slightly larger and thicker
+    let borderGeom = new RoundedBoxGeometry(card.content.contentSize.x + 0.6, card.content.contentSize.y + 0.6, .1, 2, 1); // Slightly larger and thicker
     let border = new THREE.Mesh(borderGeom, borderMaterial);
-    border.castShadow = false;
+    border.castShadow = true;
     border.receiveShadow = true;
     border.position.z = -0.05;
 
     let backsideBackground = new THREE.Mesh(cardGeom, new THREE.MeshStandardMaterial({ color: 0x5f1e24, metalness: 1, roughness: 0.6 }));
-    backsideBackground.position.z = -0.01;
+    backsideBackground.position.z = -0.06;
 
     let backgroundGroup = new THREE.Group();
     backgroundGroup.add(cardBackground);
     backgroundGroup.add(border);
     backgroundGroup.add(backsideBackground);
     card.add(backgroundGroup);
+
+    // let floorOffset = -card.content.contentSize.y / 2 - 0.5;
+    // floor.position.y = floorOffset > -4 ? -4 : floorOffset;
+    // console.log(floor.position.y);
+
 
     
     // cardBackground.position.set(card.content.contentCenter.x, card.content.contentCenter.y, 0);
@@ -282,26 +299,6 @@ async function createCard() {
         });
         
     });
-
-    // Assuming 'card' is your card object and 'camera' is your Three.js camera
-
-    // Step 1 & 2: Calculate the card's bounding box
-    const cardBoundingBox = new THREE.Box3().setFromObject(card);
-
-    // Step 3: Get the camera's frustum
-    const frustum = new THREE.Frustum();
-    const cameraViewProjectionMatrix = new THREE.Matrix4();
-
-    // Step 4: Update the frustum with the camera's current view projection matrix
-    cameraViewProjectionMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-    frustum.setFromProjectionMatrix(cameraViewProjectionMatrix);
-
-    // Step 5 & 6: Check if the bounding box intersects with the frustum
-    if (!frustum.intersectsBox(cardBoundingBox)) {
-        console.log("The card is extending outside the bounds of the camera.");
-    } else {
-        console.log("The card is within the bounds of the camera.");
-    }
 
     return card;
 }
@@ -389,7 +386,7 @@ async function loadCardContent(card, item) {
                             skip = true;
                             console.log(yOffset);
                             let imgHeight = createImagePlane(value, content, yOffset, index);
-                            yOffset -= 2.8;
+                            yOffset -= imgHeight - 0.2;
                             console.log('imgHeight:', imgHeight);
                             break;
                         default:
@@ -483,17 +480,24 @@ function measureText(text, font, size) {
 function createImagePlane(src, content, yOffset, index) {
     let img = new Image();
     img.src = src;
-    let imgWidth = 1;
-    let imgHeight = 1;
+    let imgWidth = 3;
+    let imgHeight = 3;
     img.onload = function() {
-        imgWidth = 3;
-        imgHeight = 3;
         let imgPlane = new THREE.BoxGeometry(imgWidth, imgHeight, 0.01);
         let imgTexture = new THREE.TextureLoader().load(src);
         let imgMaterial = new THREE.MeshBasicMaterial({ map: imgTexture, transparent: true });
         let imgMesh = new THREE.Mesh(imgPlane, imgMaterial);
+
         let cardCenter = content.contentCenter;
-        imgMesh.position.set(cardCenter.x, yOffset - imgHeight/2, 0.05);
+
+
+        let imgBackground = new THREE.Mesh(new THREE.PlaneGeometry(imgWidth + .1, imgHeight + .1), borderMaterial);
+        imgBackground.position.set(cardCenter.x, yOffset - imgHeight/2, 0.06);
+        imgBackground.receiveShadow = true;
+        imgBackground.castShadow = true;
+        content.add(imgBackground);
+
+        imgMesh.position.set(cardCenter.x, yOffset - imgHeight/2, 0.065);
         content.add(imgMesh);
     };
     return imgWidth;
@@ -510,6 +514,66 @@ flip.addEventListener('click', function() {
     cardFlip = !cardFlip;
 });
 
+
+let shareBtn = document.getElementById('share');
+shareBtn.addEventListener('click', function() {
+    captureCameraView();
+});
+
+async function captureCameraView() {
+
+    card.quaternion.set(0, (Math.PI/36 ), 0, 1);
+    console.log(camera.position);
+    camera.position.set(0, 0, 6);
+    camera.lookAt(0, 0, 0);
+
+    // Render the scene
+    renderer.render(scene, camera);
+
+
+    // Create an offscreen canvas and draw the rendered scene onto it
+    let offscreenCanvas = document.createElement('canvas');
+    offscreenCanvas.width = renderer.domElement.width;
+    offscreenCanvas.height = renderer.domElement.height;
+    let offscreenCtx = offscreenCanvas.getContext('2d');
+
+    offscreenCtx.drawImage(renderer.domElement, 0, 0);
+
+    // Get the image data from the offscreen canvas
+    let imageData = offscreenCtx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+    let data = imageData.data;
+
+    // Determine the bounding box of non-transparent pixels
+    let minX = offscreenCanvas.width, minY = offscreenCanvas.height, maxX = 0, maxY = 0;
+    for (let y = 0; y < offscreenCanvas.height; y++) {
+        for (let x = 0; x < offscreenCanvas.width; x++) {
+            let alpha = data[(y * offscreenCanvas.width + x) * 4 + 3];
+            if (alpha > 0) {
+                minX = Math.min(minX, x);
+                maxX = Math.max(maxX, x);
+                minY = Math.min(minY, y);
+                maxY = Math.max(maxY, y);
+            }
+        }
+    }
+
+    // Create a new canvas to fit the bounding box
+    let croppedCanvas = document.createElement('canvas');
+    croppedCanvas.width = maxX - minX + 1;
+    croppedCanvas.height = maxY - minY + 1;
+    let croppedCtx = croppedCanvas.getContext('2d');
+
+    // Draw the cropped area onto the new canvas
+    croppedCtx.drawImage(offscreenCanvas, minX, minY, croppedCanvas.width, croppedCanvas.height, 0, 0, croppedCanvas.width, croppedCanvas.height);
+
+    // Export the image from the new canvas
+    let img = new Image();
+    img.src = croppedCanvas.toDataURL('image/png');
+    let a = document.createElement('a');
+    a.href = img.src;
+    a.download = `l00t_${item.name.replace(/\s/g, '_').toLowerCase()}.png`;
+    a.click();
+}
 
 
 

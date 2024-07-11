@@ -273,6 +273,12 @@ let apiKey = null;
 let item;
 
 let setupPage = 0;
+//skip key page if key is already set
+if(localStorage.getItem('apiKey')) {
+    setupPage = 1;
+    console.log('skipping key page');
+    apiKey = localStorage.getItem('apiKey');
+}
 let pages = document.getElementsByClassName('setupPage');
 for (let i = 0; i < pages.length; i++) {
     pages[i].style.display = 'none';
@@ -294,21 +300,29 @@ nextBtn.addEventListener('click', async () => {
 
     console.log(item);
 
+    
+
     if(currPage.classList.contains('keyPage')) {
         let apiKeyInput = document.getElementById('apiKeyInput');
         let key = apiKeyInput.value;
 
-        if(key === undefined || key === null || key.trim() === '') {
-            console.log('Key is blank or undefined');
-            apiKeyInput.style.boxShadow = 'inset 0px 0px 0px 2px red';
-            apiKeyInput.placeholder = 'Please enter a valid key';
-            return;
+        if(localStorage.getItem('apiKey') !== null) {
+            apiKey = localStorage.getItem('apiKey');
         } else {
-            console.log('Key:', key);
-            apiKeyInput.style.boxShadow = 'none';
-            apiKeyInput.placeholder = 'API Key';
-            apiKey = key;
+            if(key === undefined || key === null || key.trim() === '') {
+                console.log('Key is blank or undefined');
+                apiKeyInput.style.boxShadow = 'inset 0px 0px 0px 2px red';
+                apiKeyInput.placeholder = 'Please enter a valid key';
+                return;
+            } else {
+                apiKeyInput.style.boxShadow = 'none';
+                apiKeyInput.placeholder = 'API Key';
+                apiKey = key;
+                localStorage.setItem('apiKey', key);
+            }
         }
+
+        
 
     }
 
@@ -357,9 +371,11 @@ nextBtn.addEventListener('click', async () => {
         console.log(camera.children)
         setTimeout(function() {
             
-            while(camera.children.length > 0) {
-                camera.remove(camera.children[0]);
-            }
+            let buttons = document.getElementById('buttons');
+            buttons.style.display = 'none';
+
+            let backToLoot = document.getElementById('backToLoot');
+            backToLoot.style.display = 'none';
 
             pageOffset = 0;
         
@@ -391,6 +407,11 @@ nextBtn.addEventListener('click', async () => {
         console.log(data);
         if(data.error) {
             alert(data.error.message);
+            //refresh page
+            if(data.error.code == 'invalid_api_key') {
+                localStorage.removeItem('apiKey');
+            }
+            window.location.href = "./setup.html";
             return;
         }
         const response = JSON.parse(data.choices[0].message.content);
@@ -413,25 +434,27 @@ nextBtn.addEventListener('click', async () => {
                 }
                 response.image = 'data:image/png;base64,' + data.data[0].b64_json;
                 localStorage.setItem('item', JSON.stringify(response));
-                let lootItem = Loot.createLootItem(response);
-                let itemPage = document.getElementsByClassName('itemPage')[0];
-                itemPage.appendChild(lootItem);
-                colorItems();
+                // let lootItem = Loot.createLootItem(response);
                 overlay.style.opacity = 1;
+
                 setTimeout(function() {
+                    // let itemPage = document.getElementsByClassName('itemPage')[0];
+                    // itemPage.appendChild(lootItem);
+                    // colorItems();
                     window.location.href = "./view.html";
                 }, 1000);
+                
             });
         } else {
             if(itemImg) {
                 response.image = itemImg;
             }
             localStorage.setItem('item', JSON.stringify(response));
-            let lootItem = Loot.createLootItem(response);
-            let itemPage = document.getElementsByClassName('itemPage')[0];
-            itemPage.appendChild(lootItem);
+            // let lootItem = Loot.createLootItem(response);
+            // let itemPage = document.getElementsByClassName('itemPage')[0];
+            // itemPage.appendChild(lootItem);
 
-            colorItems();
+            // colorItems();
             overlay.style.opacity = 1;
             setTimeout(function() {
                 window.location.href = "./view.html";
