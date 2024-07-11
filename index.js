@@ -64,6 +64,13 @@ window.addEventListener('mousemove', function (event) {
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 }, false);
 
+window.onresize = function () {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+};
+
 let renderer = new THREE.WebGLRenderer();
 renderer.setClearColor(0x000000);
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -99,10 +106,6 @@ itemOutline.visibleEdgeColor = new THREE.Color(0xffaa00);
 let outputPass = new OutputPass();
 composer.addPass(outputPass);
 
-let camLight = new THREE.PointLight(0xffffff, 20, 1000);
-camLight.position.set(camera.position.x, camera.position.y, camera.position.z); 
-camera.add(camLight); 
-scene.add(camera); 
 
 let chest;
 let time = 0.0;
@@ -115,7 +118,10 @@ titleArea.position.set(0, 1, -5);
 titleArea.rotation.set(160, 0, 0);
 camera.add(titleArea);
 
-
+let camLight = new THREE.PointLight(0xffffff, 1, 100);
+camLight.position.set(0, 0, 0);
+camera.add(camLight);
+scene.add(camera);
 
 
 let controls = new OrbitControls(camera, renderer.domElement);
@@ -270,7 +276,7 @@ window.addEventListener('click', function () {
     let intersects = raycaster.intersectObjects([text]);
     if (intersects.length > 0) {
         
-        text.material.color.set(0xffddaa);
+        text.material.color.set(0xffffff);
         let overlay = document.getElementById('fade-overlay');
         overlay.style.opacity = 1;
         setTimeout(function () {

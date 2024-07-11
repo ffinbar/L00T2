@@ -1,147 +1,13 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>My first three.js app</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <style>
-      * {
-        box-sizing: border-box;
-      }
-
-      body { 
-        margin: 0;
-        font-family: Arial, sans-serif;
-        font-size: 1em;
-       }
-      canvas { display: block; }
-
-      button {
-        font-size: 1.2em;
-        padding: .5em;
-        border: none;
-        border-radius: 5px;
-        background: #f0f0f0;
-        cursor: pointer;
-        transition: all 0.3s;
-      }
-
-      button.active {
-        background: #489cff;
-        color: white;
-      }
-
-      input[type="text"] {
-        width: 100%;
-        padding: 1em;
-        font-size: 1em;
-        border: none;
-        border-radius: 5px;
-        background: #f0f0f0;
-        /* margin-bottom: 1em; */
-      }
-
-      /* input[type="range"] {
-        width: 100%;
-        padding: 1em;
-        font-size: 1.5em;
-        border: none;
-        border-radius: 5px;
-        background: #f0f0f0;
-        
-      } */
-
-      #fade-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: black;
-        opacity: 1;
-        pointer-events: none;
-        transition: all 1s;
-        z-index: 99;
-      }
-
-      #setupPagesContainer {
-        position: fixed;
-        width: 100%;
-        height: 60%;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-around;
-        align-items: center;
-      }
-
-      .setupPage {
-        
-        width: 80%;
-        max-width: 800px;
-        padding: 1em;
-        background: white;
-        border-radius: .5em;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        text-align: center;
-      }
-
-      .setupPage * {
-        margin: .2em;
-      }
-
-      #itemChoice {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-around;
-      }
-
-      .typechoice {
-        flex: 1;
-        /* padding: 1em; */
-        margin-bottom: 1em;
-      }
-
-      .typechoice button {
-        width: 100%;
-        padding: .5em 1em;
-        font-size: 1.3em;
-        border: none;
-        border-radius: 5px;
-        background: #f0f0f0;
-        cursor: pointer;
-        transition: all 0.3s;
-      }
-
-      .typechoice button.active {
-        background: #489cff;
-        color: white;
-      }
-
-      /* .typechoice button:hover {
-        background: #e0e0e0;
-      } */
-
-      .typechoice p {
-        margin: 0;
-      }
-
-      p {
-        font-size: 1em;
-        margin: 0;
-      }
-
-      @media (max-width: 600px) {
-        /* .setupPage {
-          top: 30%;
-        } */
-        #itemChoice {
-          flex-direction: column;
-        }
-      }
-
-      
-      
-    </style>
+    <title>L00T</title>
     <script type="importmap">
         {
           "imports": {
@@ -151,6 +17,331 @@
         }
       </script>
   </head>
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body { 
+      margin: 0;
+      font-family: Arial, sans-serif;
+      font-size: 1em;
+      background-color: #000000;
+     }
+    canvas { display: block; }
+
+    button {
+      font-size: 1.2em;
+      padding: .5em;
+      border: none;
+      border-radius: 5px;
+      background: #f0f0f0;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    button.active {
+      background: #489cff;
+      color: white;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 1em;
+      font-size: 1em;
+      border: none;
+      border-radius: 5px;
+      background: #f0f0f0;
+      /* margin-bottom: 1em; */
+    }
+
+    /* input[type="range"] {
+      width: 100%;
+      padding: 1em;
+      font-size: 1.5em;
+      border: none;
+      border-radius: 5px;
+      background: #f0f0f0;
+      
+    } */
+
+    #fade-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: black;
+      opacity: 1;
+      pointer-events: none;
+      transition: all 1s;
+      z-index: 99;
+    }
+
+    #setupPagesContainer {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      align-items: center;
+      overflow-y: scroll;
+    }
+
+    .setupPage {
+      margin-bottom: 4rem;
+      width: 80%;
+      max-width: 800px;
+      padding: 1em;
+      background: white;
+      border-radius: .5em;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .setupPage.itemPage {
+      background: transparent;
+      height: 0;
+    }
+
+    .setupPage * {
+      margin: .2em;
+    }
+
+    #itemChoice {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+    }
+
+    .typechoice {
+      flex: 1;
+      /* padding: 1em; */
+      margin-bottom: 1em;
+    }
+
+    .typechoice button {
+      width: 100%;
+      padding: .5em 1em;
+      font-size: 1.3em;
+      border: none;
+      border-radius: 5px;
+      background: #f0f0f0;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .typechoice button.active {
+      background: #489cff;
+      color: white;
+    }
+
+    /* .typechoice button:hover {
+      background: #e0e0e0;
+    } */
+
+    .typechoice p {
+      margin: 0;
+    }
+
+    p {
+      font-size: 1em;
+      margin: 0;
+    }
+
+    @media (max-width: 600px) {
+      /* .setupPage {
+        top: 30%;
+      } */
+      #itemChoice {
+        flex-direction: column;
+      }
+    }
+
+    
+    
+  </style>
+  <style>
+    .item summary {
+      cursor: pointer;
+      user-select: none;
+  }
+
+  .item {
+      padding: 1rem;
+      border-radius: 1rem;
+      margin: 1rem;
+      color: rgb(255, 255, 255);
+      max-width: 400px;
+      min-width: 300px;
+      max-height: 100%;
+      width: fit-content;
+      border: .5rem solid #4d50b477;
+      transform-style: preserve-3d;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin: auto;
+      z-index: 2;
+      transform-style: preserve-3d;
+      border: .5rem solid transparent;
+      background-clip: padding-box;
+      text-shadow: -2px 1px 0.05rem #000000;
+      font-size: 1rem;
+      box-sizing: border-box;
+      text-align: left;
+      height: max-content;
+      max-height: unset;
+      /* background: linear-gradient(135deg, #a0a1ba 0%, #c9c9e3 100%); */
+
+  }
+
+  .item::before {
+      /* transform: translate3d(0, 0, 6px) !important; */
+      content: "";
+      position: absolute;
+      top: -.5rem;
+      right: -.5rem;
+      bottom: -.5rem;
+      left: -.5rem;
+      background-image: linear-gradient(90deg, #795330 0%, #e3a870 50%, #795330 100%);
+      border-radius: inherit;
+      z-index: -1;
+      background-clip: border-box;
+      box-decoration-break: clone;
+
+  }
+
+  .itembg {
+      /* transform: translate3d(0, 0, 7px) !important; */
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      /* background-image: linear-gradient(135deg, #5f64ff 0%, #f8f8ff 50%, #5f64ff 100%); */
+      background-image: linear-gradient(135deg, #282dd1 0%, #b4b4ff 50%, #5f64ff 100%);
+      border-radius: inherit;
+      z-index: -1;
+      background-clip: border-box;
+      box-decoration-break: clone;
+      box-shadow: inset 0 0 .5rem #00000086 !important;
+  }
+
+  .item > img {
+      width: 100%;
+      height: auto;
+      border-radius: 1rem;
+  }
+
+  .item > *:last-child {
+      margin-bottom: 0;
+  }
+
+  .name {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      margin-top: 0;
+      text-transform: capitalize;
+      font-style: italic;
+      /* text-shadow: 0 0 0.25rem #0000009d; */
+
+  }
+
+  .type {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      text-transform: capitalize;
+
+  }
+
+  .rarity {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      text-transform: capitalize;
+      /* text-shadow: 0 0 0.1rem #000000bd; */
+
+  }
+
+  .nameHex, .rarityHex {
+      display: none;
+  }
+
+  .item > *:not(.itembg), .materials, .enchantments {
+      /* transform: translate3d(0, 0, 20px); */
+      background-color: #00000033;
+      border-radius: 1rem;
+      padding: 0.5rem 1rem;
+      box-shadow: inset 0 0 0.25rem #00000036;
+  
+  }
+
+  .materials, .enchantments {
+      margin-bottom: 1rem;
+  }
+
+  summary {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+  }
+
+  summary::after {
+      content: '◀';
+      float: right;
+  }
+
+  *::marker {
+      display: none;
+      content: "";
+  }
+
+  .materials[open] summary::after {
+      content: '▼';
+  }
+
+  #materials > *:nth-child(3), #enchantments > *:nth-child(3) {
+      margin-top: 1rem;
+  }
+
+  .material > button, .enchantment > button {
+      padding: 0.5rem;
+      background-color: #4d2ac0;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      border-radius: 1rem;
+      margin: .5rem;
+  }
+
+  .materials-name, .enchantments-name {
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      text-transform: capitalize;
+  }
+
+  .materials-description, .enchantments-description {
+      text-transform: none;
+      font-weight: normal;
+      font-style: italic;
+  }
+
+  .materials h3, .enchantments h3 {
+      font-weight: normal;
+      margin: 0;
+      margin-bottom: 0.5rem;
+      text-transform: capitalize;
+  }
+
+  </style>
   <body>
     <div id="fade-overlay"></div>
     
@@ -167,11 +358,11 @@
         <div id="itemChoice">
           <div class="typechoice">
             <button id="custom">Custom</button>
-            <p>You choose the type of item and its properties. You can still let the AI decide some things.</p>
+            <p>You choose the type of item and its properties. <br> You can still let the AI decide some things.</p>
           </div>
           <div class="typechoice">
             <button id="random" class="active">A Surprise</button>
-            <p>Let the AI decide everything.</p>
+            <p>Let the AI decide everything. <br> Has a tendency to be samey.</p>
           </div>
           <input type="hidden" id="genChoice" value="random">
         </div>
@@ -203,10 +394,18 @@
       </div>
       <div class="setupPage imgPage">
         <p>Give your item an image? You can AI-generate a portrait or upload your own.</p>
-
+        <input type="file" id="imageFile" accept="image/*" style="display: none;">
+        <button id="genImg">Generate Image</button>
+        <button id="uploadImg">Upload Image</button>
+        <button id="noImg" class="active">No Image</button>
       </div>
-      <div class="setupPage itemPage">
-        
+      <div class="setupPage itemPage" style="width: unset;">
+        <div class="item"><div class="itembg"></div>
+        <p class="name" style="color: rgb(255, 102, 153);">The Cloak of Patience</p>
+        <p class="nameHex">#ff6699</p><p class="rarity" style="color: rgb(30, 144, 255);">Rare</p>
+        <p class="type">Cloak</p><p class="rarityHex">#1e90ff</p>
+        <p class="description">We are generating your item. If you can see this, you're probably waiting for an image to load. Give it a moment.</p>
+      </div>
       </div>
     </div>
     <input type="hidden" id="itemType" value="random">
@@ -236,6 +435,7 @@
         genChoice.value = 'random';
         setColours();
       });
+      
     </script>
 
     <script type="module" src="setup.js"></script>

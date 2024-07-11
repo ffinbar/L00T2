@@ -11,7 +11,8 @@ import { OutlinePass } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/pos
 import { FontLoader } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/geometries/TextGeometry.js';
 import { OutputPass } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/postprocessing/OutputPass.js';
-import { chatCompletion } from './chat.js';
+import { chatCompletion, imageCompletion } from './chat.js';
+import { Loot } from './loot.js';
 
 let scene = new THREE.Scene();
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -122,12 +123,12 @@ let fontLoader = new FontLoader();
 
 async function createButton(text, position, color, scale, onClick) {
     let button;
-    fontLoader.load('assets/font/body.json', function (font) {
+    fontLoader.load('assets/font/volk.json', function (font) {
         let geometry = new TextGeometry(text, {
             font: font,
             size: 5,
             depth: 2,
-            curveSegments: 0,
+            curveSegments: 32,
             bevelEnabled: false,
         });
 
@@ -168,14 +169,108 @@ async function createButton(text, position, color, scale, onClick) {
     return button;
 }
 
+let lootPrompt = 
+`
+You are L00T. You generate loot items based on user input. You are wildly creative and can generate anything from a simple sword to a complex magical item.
+Even mundane or common items can be interesting and unique. You are a master of your craft and can generate items that are both balanced and interesting.
+The fields specified by the user must be used to generate the item. User supplied fields must not be imbellished at all. The user can specify the type of item, the rarity, the material(s), the enchantment(s), and the name.
+Anything the user does not specify is up to you to decide. You can generate items for any setting, from fantasy to sci-fi to modern day.
+The items you create do not have to fit in any specific category, and can be as simple or complex as you like. You can also generate items that are not physical.
+You must respond in formatted JSON. The JSON must contain the following fields: name, type, rarity, materials, enchantments, and description.
+The name field is a string that represents the name of the item. The type field is a string that represents the type of item. The rarity field is a string that represents the rarity of the item.
+The materials field is an object that represents the materials used to create the item. Each material should be a key-value pair, where the key is the name of the material and the value is a string that represents the description of the material. The materials field cannot be empty.
+The enchantments field is an object that represents the enchantments on the item.
+Each enchantment and material should be a key-value pair, where the key is the name of the enchantment and the value is a string that represents the description of the enchantment. The enchantments field can be empty if the item has no enchantments.
+The enchantment descriptions should be at most a few sentences long and should describe the enchantment, its effects, and any other relevant information.
+The description field is a string that represents a description of the item. The description should be a few sentences long and should describe the item in detail. Be as concise as possible, but make sure to include all relevant information. The item card is 300px wide, so the information should aim to be compact.
+You also should decide on colors for the item. The colors should be based on the rarity of the item. For example, a common item could be gray, an uncommon item could be green, a rare item could be blue, and a legendary item could be orange.
+The name will also have a color that is not the same as the rarity color. Avoid overly dark colors, as they may be hard to read.
+The JSON should be formatted as follows:
+{
+  "name": "The Sword of Destiny",
+  "nameHex": "#a0fcff",
+  "rarity": "legendary",
+  "type": "sword",
+  "rarityHex": "#FFA500",
+  "materials": {
+        adamantite: "The blade is forged from the finest adamantite.",
+        mithril: "The hilt is crafted from mithril, making it incredibly light and durable."
+    },
+  "enchantments": {
+        fire: "The sword is wreathed in flames, dealing additional fire damage.",
+        ice: "The sword is imbued with the power of ice, slowing enemies on hit."
+    },
+  "stats": {
+        damage: "+50 damage per hit.",
+        health: "+100 health.",
+        nightVision: "Grants night vision."
+    },
+  "description": "The Sword of Destiny is a legendary sword forged from the finest adamantite and mithril. It is wreathed in flames and imbued with the power of ice, making it a formidable weapon in battle."
+}
+Try to be as concise as possible in your responses. The user has given you a starting point, and it is up to you to make the item unique and interesting. The end result is presented like a trading card, so text cant be too long.
+An item with some user specified fields will be given to you in a seemingly unfinished state. You must use the user specified fields to generate the item, and fill in the missing fields with your own creative ideas.
+You must also ensure that the item is balanced and interesting, and that it fits the setting and context provided by the user. You must also ensure that the item is unique and interesting.
+An example of a user specified item is as follows:
+{
+  "name": "The Sword of Destiny",
+  "rarity": "",
+  "type": "",
+  "materials": {},
+  "enchantments": {},
+  "description": "A legendary sword that is imbued with the power of ice and fire. It is said to be able to cut through anything."   
+}
+In this example, the user has specified the name and description of the item, but has left the other fields empty. You must use the name and description to generate the item, and fill in the missing fields with your own creative ideas.
+
+Adding new properties:
+You can add new properties to the item if you think it will make the item more interesting. For example, you could add a "damage" property to a weapon, or a "healing" property to a potion. As long as they follow JSON formatting, you can add any properties you like. It is encouraged to add new properties to make the item more unique and interesting.
+You can also add new properties to the materials and enchantments if you think it will make the item more interesting. For example, you could add a "weight" property to a material, or a "duration" property to an enchantment.
+You can also add new properties to the item, materials, and enchantments that are not related to the item itself. For example, you could add a "lore" property to the item, or a "source" property to a material or enchantment.
+Do not add properties that are not relevant to the item, such as a "price" property to a magical item in a setting where money is not used. Only add properties that make sense in the context of the item and the setting.
+An example of adding new properties to an item is as follows:
+{
+  "name": "The Sword of Destiny",
+  "nameHex": "#a0fcff",
+  "rarity": "legendary",
+  "type": "sword",
+  "rarityHex": "#FFA500",
+  "materials": {
+        adamantite: "The blade is forged from the finest adamantite.",
+        mithril: "The hilt is crafted from mithril, making it incredibly light and durable."
+    },
+  "enchantments": {
+        fire: "The sword is wreathed in flames, dealing additional fire damage.",
+        ice: "The sword is imbued with the power of ice, slowing enemies on hit."
+    },
+  "stats": {
+        damage: "The sword deals 50 damage per hit.",
+    },
+  "bonus": {
+        lore: "The sword is said to have been forged by the gods themselves, and is imbued with their power."
+    },
+    }
+  },
+  "description": "The Sword of Destiny is a legendary sword forged from the finest adamantite and mithril. It is wreathed in flames and imbued with the power of ice, making it a formidable weapon in battle.",
+  "damage": "The sword deals 50 damage per hit.",
+  "lore": "The sword is said to have been forged by the gods themselves, and is imbued with their power."
+}
+
+Remember to always include nameHex and rarityHex fields in the JSON. These fields should contain the hex color codes for the name and rarity of the item, respectively.
+Try to fill every field in the JSON with creative and interesting ideas. The user has given you a starting point, and it is up to you to make the item unique and interesting.
+In the description, try not to reiterate information that is already present in the other fields. Instead, focus on adding new information that will make the item more interesting and unique.
+`;
+
+function randomCharString(length) {
+    let result = '';
+    let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+}
+
 let apiKey = null;
 
-let item = {
-    name: 'null',
-    type: 'null',
-    rarity: 'null',
-    description: 'null',
-}
+let item;
 
 let setupPage = 0;
 let pages = document.getElementsByClassName('setupPage');
@@ -188,11 +283,15 @@ for (let i = 0; i < pages.length; i++) {
 let lastPage = false;
 let pageOffset = 1;
 
+let shouldGenImg = false;
+let itemImg = null;
 
 let textBegin = await createButton('Okay', new THREE.Vector3(0, -1, -3), 0x00dd00, 0.05, async function() {
     let currPage = pages[setupPage];
 
     lastPage = currPage == pages[(pages.length - 1) - pageOffset] ? true : false;
+
+    console.log(item);
 
     if(currPage.classList.contains('keyPage')) {
         let apiKeyInput = document.getElementById('apiKeyInput');
@@ -235,18 +334,13 @@ let textBegin = await createButton('Okay', new THREE.Vector3(0, -1, -3), 0x00dd0
         let text = currPage.querySelector('input[type="text"]') ? currPage.querySelector('input[type="text"]').value : "blank";
         let value = currPage.querySelector('input[type="hidden"]');
 
-        if(text != 'blank' && value.id != 'apiKey') {
-            if(text == '') {
-                text = 'null';
-            }
-
+        if(text != 'blank' && text != '' && value.id != 'apiKey') {
+            item = item ? item : {};
             value.setAttribute('value', text);
             let key = value.id;
             item[key] = text;
             console.log(text, item);
         }
-
-
     }
 
     console.log(currPage);
@@ -258,69 +352,101 @@ let textBegin = await createButton('Okay', new THREE.Vector3(0, -1, -3), 0x00dd0
         setTimeout(function() {
             overlay.style.opacity = 0;
         }, 5000);
-        let body = {
-            model: 'gpt-3.5-turbo',
-            messages: [
-                {
-                    role: 'user',
-                    content: `You are setting up a new item for the game. Your response will be in JSON formatting. You can only use the following fields. It must exactly match the following:
-                    {
-                        "name": "Excalibur",
-                        "type": "Sword",
-                        "rarity": "Legendary",
-                        "description": "A legendary sword that was once wielded by King Arthur."
-                    }`
-                },
-                {
-                    role: 'system',
-                    content: 'If any of the fields are listed as "null", it is your responsibility to fill in the missing information with a creative and appropriate response. Your response should be the finished item, with no fields listed as "null". Think of an entirely new item. It can be anything, from a sword to a potion to a slice of pizza.'
-                },
-                {
-                    role: 'user',
-                    content: `{
-                        "name": "Rock",
-                        "type": "null",
-                        "rarity": "Common",
-                        "description": "null"
-                    }`
-                },
-                {
-                    role: 'assistant',
-                    content: `
-                    {
-                        "name": "Rock",
-                        "type": "Object",
-                        "rarity": "Common",
-                        "description": "A simple yet sturdy rock found in the wild."
-                    }
-                    `
-                },
-                {
-                    role: 'user',
-                    content: 'The item is a ' + item.name + ' and is of type ' + item.type + '. The item is ' + item.rarity + ' and is described as ' + item.description + '. Do not leave any fields as "null".'
-                }
-            ],
-            response_format: { "type": "json_object" },
-            temperature: 1.3,
-            seed: Math.floor(Math.random() * 1000),
-        };
-        // let completion = await chatCompletion(body, apiKey);
-        // console.log(completion.choices[0].message.content);
-        // let response = JSON.parse(completion.choices[0].message.content);
-        // console.log(response);
-        overlay.style.opacity = 0;
-        pageOffset = 0;
+
+        console.log(camera.children)
+        setTimeout(function() {
+            
+            while(camera.children.length > 0) {
+                camera.remove(camera.children[0]);
+            }
+
+            pageOffset = 0;
         
 
-        for (let i = 0; i < pages.length; i++) {
-            pages[i].style.display = 'none';
+            for (let i = 0; i < pages.length; i++) {
+                pages[i].style.display = 'none';
+                
+            }
             
+            currPage = pages[pages.length - 1];
+            currPage.style.display = 'block';
+        }, 1000);
+
+        const itemPrompt = item ? JSON.stringify(item) : null;
+
+        const chatObj = {
+            model: 'gpt-3.5-turbo',
+            messages: [
+                { "role": "system", "content": lootPrompt},
+                { "role": "user", "content": "New L00T request recieved! The item fields provided are as follows:" },
+                { "role": "system", "content": itemPrompt !== null ? itemPrompt : `No details provided. Generate a random unique item. Use the following random characters as a seed: ${randomCharString(Math.floor(Math.random() * 10) + 10)}` }
+            ],
+            response_format: { "type": "json_object" },
+            seed: Math.floor(Math.random() * 1000),
+            temperature: 1.4,
+        };
+
+        let data = await chatCompletion(chatObj, apiKey);
+        console.log(data);
+        if(data.error) {
+            alert(data.error.message);
+            return;
         }
-        pages = document.getElementsByClassName('itemPage');
+        const response = JSON.parse(data.choices[0].message.content);
+        console.log(response);
+
+        if (shouldGenImg) {
+
+            const image = {
+                model: 'dall-e-2',
+                prompt: `A video game item portrait: ${response.description}. The entire item should be centred in the frame.The image will be 256x256px.`,
+                size: "256x256",
+                response_format: "b64_json"
+            };
+
+            await imageCompletion(image, apiKey).then(data => {
+                console.log(data);
+                if(data.error) {
+                    alert(data.error.message);
+                    return;
+                }
+                response.image = 'data:image/png;base64,' + data.data[0].b64_json;
+                localStorage.setItem('item', JSON.stringify(response));
+                let lootItem = Loot.createLootItem(response);
+                let itemPage = document.getElementsByClassName('itemPage')[0];
+                itemPage.appendChild(lootItem);
+                colorItems();
+                overlay.style.opacity = 1;
+                setTimeout(function() {
+                    window.location.href = "./view.html";
+                }, 1000);
+            });
+        } else {
+            if(itemImg) {
+                response.image = itemImg;
+            }
+            localStorage.setItem('item', JSON.stringify(response));
+            let lootItem = Loot.createLootItem(response);
+            let itemPage = document.getElementsByClassName('itemPage')[0];
+            itemPage.appendChild(lootItem);
+
+            colorItems();
+            overlay.style.opacity = 1;
+            setTimeout(function() {
+                window.location.href = "./view.html";
+            }, 1000);
+        }
+
         
-        setupPage = 0;
-        currPage = pages[setupPage];
-        currPage.style.display = 'block';
+
+        
+
+        // overlay.style.opacity = 1;
+        // setTimeout(function() {
+        //     window.location.href = "./view.html";
+        // }, 1000);
+
+       
 
         return;
 
@@ -330,7 +456,51 @@ let textBegin = await createButton('Okay', new THREE.Vector3(0, -1, -3), 0x00dd0
 
     lastPage = currPage == pages[(pages.length - 1) - pageOffset] ? true : false;
 
-    
+    if(currPage.classList.contains('imgPage')) {
+        console.log('img page');
+        let uploadImg = document.getElementById('uploadImg');
+        let genImg = document.getElementById('genImg');
+        let noImg = document.getElementById('noImg');
+        let imageFileInput = document.getElementById('imageFile');
+
+        genImg.addEventListener('click', async () => {
+            shouldGenImg = true;
+            itemImg = null;
+            genImg.classList.add('active');
+            noImg.classList.remove('active');
+            uploadImg.classList.remove('active');
+
+        });
+
+        noImg.addEventListener('click', () => {
+            shouldGenImg = false;
+            itemImg = null;
+            noImg.classList.add('active');
+            genImg.classList.remove('active');
+            uploadImg.classList.remove('active');
+        });
+
+        uploadImg.addEventListener('click', () => {
+            shouldGenImg = false;
+            itemImg = null;
+
+            uploadImg.classList.add('active');
+            noImg.classList.remove('active');
+            genImg.classList.remove('active');
+
+            imageFileInput.click();
+
+            imageFileInput.addEventListener('change', async () => {
+                let file = imageFileInput.files[0];
+                let reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = function() {
+                    itemImg = reader.result;
+                };
+            });
+
+        });
+    }
     
 
     for (let i = 0; i < pages.length; i++) {
@@ -343,15 +513,36 @@ let textBegin = await createButton('Okay', new THREE.Vector3(0, -1, -3), 0x00dd0
     
 });
 
+function colorItems() {
+    const items = document.querySelectorAll('.item');
+
+    items.forEach(item => {
+        const nameHexElement = item.querySelector('.nameHex');
+        const rarityHexElement = item.querySelector('.rarityHex');
+
+        const nameElement = item.querySelector('.name');
+        const rarityElement = item.querySelector('.rarity');
+
+        if (nameHexElement && nameElement) {
+            nameElement.style.color = nameHexElement.textContent;
+        }
+        if (rarityHexElement && rarityElement) {
+            rarityElement.style.color = rarityHexElement.textContent;
+        }
+    });
+}
+
 
 let textBack = createButton('Back', new THREE.Vector3(0, -1.8, -3), 0xdd0000, 0.025, function() {
     if(setupPage == 0) {
 
         let overlay = document.getElementById('fade-overlay');
-        overlay.style.opacity = 1;
+        overlay.style.opacity = 0;
+        console.log('back');
 
         setTimeout(function() {
-            window.location.href = "./index.html";
+            // window.location.href = "./index.html";
+
         }, 1000);
 
     } else {
@@ -367,7 +558,7 @@ let textBack = createButton('Back', new THREE.Vector3(0, -1.8, -3), 0xdd0000, 0.
        
     } else {
 
-    setupPage = (setupPage - 1) % pages.length;
+        setupPage = (setupPage - 1) % pages.length;
     
     }
 
@@ -444,7 +635,7 @@ animate();
 
 
 window.addEventListener('click', function (event) {
-    if (event.target instanceof HTMLElement && event.target.tagName != 'CANVAS') {
+    if (event.target instanceof HTMLElement && event.target.tagName != 'CANVAS' && event.target.id != 'setupPagesContainer' && event.target.id != 'fade-overlay') {
         console.log(event.target);
         return;
     }
