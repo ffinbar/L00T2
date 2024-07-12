@@ -56,21 +56,22 @@ let bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.
 composer.addPass(bloomPass);
 bloomPass.radius = 1;
 bloomPass.threshold = 1;
+bloomPass.strength = .5;
 
-let outlinePass = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
-composer.addPass(outlinePass);
-outlinePass.edgeStrength = 5;
-outlinePass.edgeGlow = .2;
+// let outlinePass = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
+// composer.addPass(outlinePass);
+// outlinePass.edgeStrength = 5;
+// outlinePass.edgeGlow = .2;
 
 let outputPass = new OutputPass();
 composer.addPass(outputPass);
 
 
-let itemOutline = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
-composer.addPass(itemOutline);
-itemOutline.edgeStrength = 5;
-itemOutline.edgeGlow = 1;
-itemOutline.visibleEdgeColor = new THREE.Color(0xffaa00);
+// let itemOutline = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
+// composer.addPass(itemOutline);
+// itemOutline.edgeStrength = 5;
+// itemOutline.edgeGlow = 1;
+// itemOutline.visibleEdgeColor = new THREE.Color(0xffaa00);
 
 let camLight = new THREE.PointLight(0xffffff, 20, 1000);
 camLight.position.set(camera.position.x, camera.position.y, camera.position.z); 
@@ -99,16 +100,14 @@ loader.load('assets/cardload.glb', function (gltf) {
     card.scale.set(3, 3, 3);
     card.position.set(0, 0, -1);
     card.rotation.set(0, Math.PI /2, 0);
-    itemOutline.selectedObjects.push(card);
+    // itemOutline.selectedObjects.push(card);
 
     card.traverse(function (node) {
         if (node.isMesh) {
             node.renderOrder = 1000;
             if (node.material.type === 'MeshStandardMaterial' || node.material.type === 'MeshPhongMaterial') {
-                node.material.emissive = new THREE.Color(0xffffff);
-                node.material.emissiveIntensity = .5;
-                node.material.emissiveMap = node.material.map;
-                node.material.needsUpdate = true; 
+                node.material.metalness = 1;
+                node.material.roughness = 0.5;
             }
         }
     });
@@ -674,6 +673,8 @@ function animate() {
         let distance = camera.position.distanceTo(card.position);
         camLight.intensity = 4 * distance; 
         card.rotation.y += delta /4;
+        card.rotation.x += delta /6;
+        card.rotation.z += delta /8;
         card.position.y = .5 + Math.sin(time*.4)*2;
         time += .6 * delta;
     }

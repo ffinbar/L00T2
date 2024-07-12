@@ -11,6 +11,11 @@ import { OutlinePass } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/pos
 import { FontLoader } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/geometries/TextGeometry.js';
 import { OutputPass } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/postprocessing/OutputPass.js';
+import Stats from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/libs/stats.module.js';
+
+// let stats = new Stats();
+// document.body.appendChild(stats.dom);
+
 // import { imageEdit } from './chat.js';
 
 // async function edit(imgObj, key) {
@@ -56,12 +61,6 @@ let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHei
 
 camera.position.set(0, 1, 4);
 
-let mouse = new THREE.Vector2();
-
-window.addEventListener('mousemove', function (event) {
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-}, false);
 
 window.onresize = function () {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -75,9 +74,8 @@ renderer.setClearColor(0x000000);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.7;
+renderer.toneMappingExposure = 0.5;
 renderer.outputEncoding = THREE.sRGBEncoding;
 
 document.body.appendChild(renderer.domElement);
@@ -90,17 +88,7 @@ let bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.
 composer.addPass(bloomPass);
 bloomPass.radius = 1;
 bloomPass.threshold = 1;
-
-let outlinePass = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
-composer.addPass(outlinePass);
-outlinePass.edgeStrength = 5;
-outlinePass.edgeGlow = 1;
-
-let itemOutline = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
-composer.addPass(itemOutline);
-itemOutline.edgeStrength = 5;
-itemOutline.edgeGlow = 1;
-itemOutline.visibleEdgeColor = new THREE.Color(0xffaa00);
+bloomPass.strength = .5;
 
 let outputPass = new OutputPass();
 composer.addPass(outputPass);
@@ -111,11 +99,12 @@ let time = 0.0;
 
 
 
-let titleArea = new THREE.RectAreaLight(0xffffff, .5, 3, .75);
-titleArea.intensity = 3;
-titleArea.position.set(0, 1, -5);
-titleArea.rotation.set(160, 0, 0);
-camera.add(titleArea);
+let chestPoint = new THREE.PointLight(0xffffff, 0, 100);
+chestPoint.position.set(-.5, .25, .5);
+scene.add(chestPoint);
+
+// let titleHelper = new THREE.SpotLightHelper(titleArea);
+// scene.add(titleHelper);
 
 let camLight = new THREE.PointLight(0xffffff, 1, 100);
 camLight.position.set(0, 0, 0);
@@ -127,21 +116,21 @@ let controls = new OrbitControls(camera, renderer.domElement);
 controls.enablePan = false;
 
 let loader = new GLTFLoader();
-loader.load('assets/chest/chest.glb', function (gltf) {
+loader.load('assets/chest/chestPerf.glb', function (gltf) {
     chest = gltf.scene;
     chest.scale.set(2, 2, 2);
     chest.rotation.y = Math.PI / -2;
     scene.add(chest);
-    let area = new THREE.RectAreaLight(0xffffff, .5, 1.5, .75);
-    area.intensity = 5;
-    area.position.set(0, -.1, 0);
-    area.rotation.set(Math.PI / 2, 0, Math.PI / -2);
-    chest.add(area);
-    let areaFlipped = new THREE.RectAreaLight(0xffffff, .5, 1.5, .75);
-    areaFlipped.intensity = 3;
-    areaFlipped.position.set(0, 0, 0);
-    areaFlipped.rotation.set(Math.PI / -2, 0, Math.PI / -2);
-    chest.add(areaFlipped);
+    // let area = new THREE.RectAreaLight(0xffffff, .5, 1.5, .75);
+    // area.intensity = 5;
+    // area.position.set(0, -.1, 0);
+    // area.rotation.set(Math.PI / 2, 0, Math.PI / -2);
+    // chest.add(area);
+    // let areaFlipped = new THREE.RectAreaLight(0xffffff, .5, 1.5, .75);
+    // areaFlipped.intensity = 3;
+    // areaFlipped.position.set(0, 0, 0);
+    // areaFlipped.rotation.set(Math.PI / -2, 0, Math.PI / -2);
+    // chest.add(areaFlipped);
     // outlinePass.selectedObjects.push(chest);
 
     // let helper = new RectAreaLightHelper(area);
@@ -153,16 +142,14 @@ loader.load('assets/sworddisp.glb', function (gltf) {
     sword.scale.set(2, 2, 2);
     sword.rotation.y = Math.PI / -2;
     scene.add(sword);
-    itemOutline.selectedObjects.push(sword);
+    // itemOutline.selectedObjects.push(sword);
     
     sword.traverse(function (node) {
         if (node.isMesh) {
             node.renderOrder = 1000;
             if (node.material.type === 'MeshStandardMaterial' || node.material.type === 'MeshPhongMaterial') {
-                node.material.emissive = new THREE.Color(0xffffff);
-                node.material.emissiveIntensity = 1.3;
-                node.material.emissiveMap = node.material.map;
-            node.material.needsUpdate = true; 
+                node.material.metalness = 1;
+                node.material.roughness = .4;
        
             }
         }
@@ -172,17 +159,19 @@ loader.load('assets/sworddisp.glb', function (gltf) {
 
 loader.load('assets/l00t.glb', function (gltf) {
     let l00t = gltf.scene;
-    l00t.position.set(0, 1, -5);
-    l00t.scale.set(4, 4, 4);
+    l00t.position.set(0, 0.5, -3);
+    l00t.scale.set(3, 3, 3);
     l00t.rotation.y = Math.PI / -2;
     camera.add(l00t);
-    outlinePass.selectedObjects.push(l00t);
+    // titleArea.target = l00t;
+    // outlinePass.selectedObjects.push(l00t);
     l00t.traverse(function (node) {
         if (node.isMesh) {
+
             node.renderOrder = 1000;
             if (node.material.type === 'MeshStandardMaterial' || node.material.type === 'MeshPhongMaterial') {
-                node.material.emissive = new THREE.Color(0xffffff);
-                node.material.emissiveIntensity = 0;
+                node.material.metalness = 1;
+                node.material.roughness = .4;
             }
         }
     });
@@ -192,7 +181,7 @@ let clock = new THREE.Clock();
 
 function animate() {
     let delta = clock.getDelta();
- 
+    // stats.update();
 
     requestAnimationFrame(animate);
     controls.update();
@@ -202,8 +191,12 @@ function animate() {
         let distance = camera.position.distanceTo(chest.position);
         camLight.intensity = .8 * distance; 
         time += .3 * delta;
-        chest.rotation.y = 30 + Math.sin(time) / 2;
+        chest.rotation.y = 30 - Math.sin(time) / 2;
+        chestPoint.position.x = -(Math.sin(time) /2)*1.2;
+        chestPoint.intensity = chestPoint.intensity < 2 ? chestPoint.intensity + .01 : 2;
     }
+
+    // titleHelper.update();
 
     composer.render();
 }
