@@ -95,11 +95,11 @@ controls.enableZoom = true;
 
 scene.add(camera); 
 
-let camLight = new THREE.PointLight(0xffffff, 5, 100);
+let camLight = new THREE.PointLight(0xffffff, 15, 100);
 camLight.position.set(0, 0, 0);
-camLight.castShadow = true;
+camLight.castShadow = false;
 
-// camera.add(camLight);
+camera.add(camLight);
 
 // let titleArea = new THREE.RectAreaLight(0xffffff, .5, 1, 2);
 // titleArea.intensity = 3;
@@ -107,10 +107,10 @@ camLight.castShadow = true;
 // titleArea.rotation.set(0, 0, 0);
 // scene.add(titleArea);
 
-let backLight = new THREE.PointLight(0xffffff, 10, 100);
+let backLight = new THREE.PointLight(0xffffff, 15, 100);
 backLight.castShadow = true;
 // backLight.intensity = 4;
-backLight.position.set(2, 2, -2);
+backLight.position.set(0, 0, -3);
 backLight.lookAt(0, 0, 0);
 scene.add(backLight);
 
@@ -119,14 +119,14 @@ backLight2.castShadow = true;
 // backLight2.intensity = 4;
 backLight2.position.set(-2, -2, -2);
 backLight2.lookAt(0, 0, 0);
-scene.add(backLight2);
+// scene.add(backLight2);
 
 let backLight3 = new THREE.SpotLight(0xffffff, 5, 10, 10, 0, 1);
 backLight3.castShadow = true;
 // backLight3.intensity = 4;
 backLight3.position.set(0, 0, -2);
 backLight3.lookAt(0, 0, 0);
-scene.add(backLight3);
+// scene.add(backLight3);
 
 
 let sideLight = new THREE.SpotLight(0xffffff, 5, 10, 10, 0, 1);
@@ -517,14 +517,11 @@ shareBtn.addEventListener('click', function(event) {
 
 async function captureCameraView() {
 
-    composer.setPixelRatio(window.devicePixelRatio * 2);
-
     //we want a slightly random card quaternion
     let random = (Math.random() * 0.5) - 0.25;
 
     let quaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, random, 0, 'XYZ'));
     card.quaternion.copy(quaternion);
-
 
     console.log(camera.position);
     camera.position.set(0, random, card.content.contentSize.y);
@@ -533,9 +530,6 @@ async function captureCameraView() {
 
     // Render the scene
     composer.render();
-
-    composer.setPixelRatio(window.devicePixelRatio);
-
 
     // Create an offscreen canvas and draw the rendered scene onto it
     let offscreenCanvas = document.createElement('canvas');

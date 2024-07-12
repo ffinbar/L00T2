@@ -482,8 +482,7 @@
       window.onload = function() {
           if(sessionStorage.getItem('visited') === null) {
               sessionStorage.setItem('visited', 'true');
-              let overlay = document.getElementById('fade-overlay');
-              overlay.style.opacity = 0;
+              
           } else {
               //reload page
               sessionStorage.removeItem('visited');
@@ -494,7 +493,9 @@
           } else {
             document.getElementById('backToLoot').style.display = 'none';
           }
-      }
+          let overlay = document.getElementById('fade-overlay');
+          overlay.style.opacity = 0;
+        }
 
       const custom = document.getElementById('custom');
       const random = document.getElementById('random');
