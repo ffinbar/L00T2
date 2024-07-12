@@ -69,7 +69,14 @@
     </button>
   </body>
   <script>
-    window.onload = function() {
+    window.pageshow = function() {
+      if(sessionStorage.getItem('visited') === null) {
+        sessionStorage.setItem('visited', 'true');
+      } else {
+        //reload page
+        sessionStorage.removeItem('visited');
+        window.location.reload();
+      }
       document.getElementById('fade-overlay').style.opacity = 0;
       document.getElementById('fade-overlay').style.pointerEvents = 'none';
     }
