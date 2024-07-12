@@ -54,7 +54,8 @@ import { OutputPass } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/post
 let scene = new THREE.Scene();
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-let raycaster = new THREE.Raycaster();
+camera.position.set(0, 1, 4);
+
 let mouse = new THREE.Vector2();
 
 window.addEventListener('mousemove', function (event) {
@@ -187,53 +188,6 @@ loader.load('assets/l00t.glb', function (gltf) {
     });
 });
 
-
-
-let fontLoader = new FontLoader();
-let text;
-
-fontLoader.load('assets/font/body.json', function (font) {
-
-    let geometry = new TextGeometry('Begin', {
-        font: font,
-        size: 5,
-        depth: 2,
-        curveSegments: 0,
-        bevelEnabled: false,
-    });
-
-    geometry.computeBoundingBox();
-    geometry.center();
-
-    let material = new THREE.MeshBasicMaterial({ color: 0x000000 });
-    text = new THREE.Mesh(geometry, material);
-    
-    
-    let box = new THREE.Box3().setFromObject(text);
-
-    let clickgeom = new THREE.BoxGeometry(box.getSize(new THREE.Vector3()).x, box.getSize(new THREE.Vector3()).y, box.getSize(new THREE.Vector3()).z);
-    let clickmat = new THREE.MeshBasicMaterial({ visible: false });
-
-    let mesh = new THREE.Mesh(clickgeom, clickmat);
-
-    mesh.position.copy(box.getCenter(new THREE.Vector3()));
-
-   
-
-    
-
-    text.add(mesh);
-    text.position.set(0, -1, -3);
-    text.scale.set(0.05, 0.05, 0.05);
-    camera.add(text);
-
-    outlinePass.selectedObjects.push(text);
-
-});
-
-let scaleHover = new THREE.Vector3(0.06, 0.06, 0.06);
-let scaleNormal = new THREE.Vector3(0.05, 0.05, 0.05);
-
 let clock = new THREE.Clock();
 
 function animate() {
@@ -243,19 +197,7 @@ function animate() {
     requestAnimationFrame(animate);
     controls.update();
     renderer.render(scene, camera);
-    let distance = camLight.position.distanceTo(new THREE.Vector3(0, 0, 0));
-    raycaster.setFromCamera(mouse, camera);
 
-    if(text) {
-    text.lookAt(camera.position);
-
-    let intersects = raycaster.intersectObjects([text]);
-        if (intersects.length > 0) {
-            text.scale.lerp(scaleHover, 0.1); 
-        } else {
-            text.scale.lerp(scaleNormal, 0.1); 
-        }
-    }
     if (chest) {
         let distance = camera.position.distanceTo(chest.position);
         camLight.intensity = .8 * distance; 
@@ -263,33 +205,8 @@ function animate() {
         chest.rotation.y = 30 + Math.sin(time) / 2;
     }
 
-
     composer.render();
 }
 animate();
-
-
-window.addEventListener('click', function () {
-    raycaster.setFromCamera(mouse, camera);
-    let intersects = raycaster.intersectObjects([text]);
-    if (intersects.length > 0) {
-        
-        text.material.color.set(0xffffff);
-        let overlay = document.getElementById('fade-overlay');
-        overlay.style.opacity = 1;
-        setTimeout(function () {
-            window.location.href = "./setup.html";
-        }, 1000);
-    }
-}, false);
-
-window.addEventListener('load', function() {
-    let overlay = document.getElementById('fade-overlay');
-    overlay.style.opacity = 0;
-
-    camera.position.set(0, 1, 4);
-    // shouldLerp = true;
-        
-});
 
 

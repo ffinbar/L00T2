@@ -94,7 +94,7 @@
     .setupPage {
       margin-bottom: 4rem;
       width: 80%;
-      max-width: 800px;
+      max-width: 600px;
       padding: 1em;
       background: white;
       border-radius: .5em;
@@ -411,39 +411,42 @@
         <div id="itemChoice">
           <div class="typechoice">
             <button id="custom">Custom</button>
-            <p>You choose the type of item and its properties. <br> You can still let the AI decide some things.</p>
+            <p>You choose the type of item and its properties.</p>
           </div>
           <div class="typechoice">
             <button id="random" class="active">A Surprise</button>
-            <p>Let the AI decide everything. <br> Has a tendency to be samey.</p>
+            <p>Let the AI decide everything.</p>
           </div>
           <input type="hidden" id="genChoice" value="random">
         </div>
       </div>
 
-      <div class="setupPage">
+      <div class="setupPage itemKey">
         <p>What is the name of your item?</p>
         <input type="text" id="itemName" placeholder="Excalibur" autocomplete="off">
         <input type="hidden" id="name" value="random">
         <p>Leave blank for a random name.</p>
       </div>
 
-      <div class="setupPage">
+      <div class="setupPage itemKey">
         <p>What type of item is it?</p>
         <input type="text" id="itemType" placeholder="Sword" autocomplete="off">
         <input type="hidden" id="type" value="random">
+        <p>Leave blank for a random type.</p>
       </div>
 
-      <div class="setupPage">
+      <div class="setupPage itemKey">
         <p>How rare is your item?</p>
         <input type="text" id="rarity" placeholder="Legendary" autocomplete="off">
         <input type="hidden" id="rarity" value="random">
+        <p>Leave blank for a random rarity.</p>
       </div>
 
-      <div class="setupPage">
+      <div class="setupPage itemKey">
         <p>Describe any extra details or properties of your item. <br> These could be magical effects, historical significance, or anything else you can think of. <br> You can include visual details, but you can also leave that to the AI. The AI will use this description to help generate your item.</p>
         <input type="text" id="description" placeholder="Once wielded by king..." autocomplete="off">
         <input type="hidden" id="description" value="random">
+        <p>Leave blank for a random description.</p>
       </div>
       <div class="setupPage imgPage">
         <p>Give your item an image? You can AI-generate a portrait or upload your own.</p>

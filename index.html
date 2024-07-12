@@ -20,20 +20,66 @@
   <style>
     body { margin: 0; }
     canvas { display: block; }
+
+    @font-face {
+      font-family: 'l00t';
+      src: url(assets/font/l00t.ttf);
+    }
+
+    #begin {
+      font-family: 'l00t';
+      position: fixed;
+      bottom: 10%;
+      left: 0;
+      right: 0;
+      width: fit-content;
+      margin: auto;
+      padding: 1em;
+      font-size: 4em;
+      background: transparent;
+      color: white;
+      border: none;
+      border-radius: 1em;
+      cursor: pointer;
+      text-shadow: 0 0 2px gold;
+      transition: text-shadow 0.5s;
+    }
+
+    #begin:hover {
+      text-shadow: 0 0 12px gold;
+    }
+
+    #fade-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: black;
+      opacity: 1;
+      transition: opacity 1s;
+      z-index: 1;
+    }
   </style>
   <body>
-    <div id="fade-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; opacity: 1; pointer-events: none; transition: opacity 1s;"></div>
+    <div id="fade-overlay"></div>
     <script type="module" src="index.js"></script>
+    <button id="begin" onclick="begin();">
+      BEGIN
+    </button>
   </body>
   <script>
     window.onload = function() {
-      if(sessionStorage.getItem('visited') === null) {
-          sessionStorage.setItem('visited', 'true');
-      } else {
-          //reload page
-          sessionStorage.removeItem('visited');
-          window.location.reload();
-      }
+      document.getElementById('fade-overlay').style.opacity = 0;
+      document.getElementById('fade-overlay').style.pointerEvents = 'none';
+    }
+
+    function begin() {
+      document.getElementById('fade-overlay').style.opacity = 1;
+      document.getElementById('fade-overlay').style.pointerEvents = 'all';
+      setTimeout(function() {
+        window.location.href = './setup.html';
+      }, 1000);
     }
   </script>
 </html>

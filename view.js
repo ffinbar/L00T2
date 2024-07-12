@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+let THREE = await import('three');
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/controls/OrbitControls.js';
 import { RectAreaLightUniformsLib } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/lights/RectAreaLightUniformsLib.js';
@@ -6,7 +6,8 @@ RectAreaLightUniformsLib.init();
 import { RectAreaLightHelper } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/helpers/RectAreaLightHelper.js';
 import { EffectComposer } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { BokehPass } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/postprocessing/BokehPass.js';
+// import { UnrealBloomPass } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutlinePass } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/postprocessing/OutlinePass.js';
 import { FontLoader } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/geometries/TextGeometry.js';
@@ -20,38 +21,6 @@ import Stats from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/libs/stats.mo
 let scene = new THREE.Scene();
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-let raycaster = new THREE.Raycaster();
-let mouse = new THREE.Vector2();
-let targetMouse = new THREE.Vector2(null, null);
-
-// Detect touch support
-const hasTouchSupport = 'ontouchstart' in window;
-
-// Mousemove event listener (for non-touch devices)
-function onMouseMove(event) {
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-}
-
-// Touchmove event listener
-function onTouchMove(event) {
-    if(event.touches.length > 1) return;
-    if(event.touches.length === 1) {
-        event.preventDefault();
-        let touch = event.touches[0];
-        targetMouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
-        targetMouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
-    }
-}
-
-// Conditionally add event listeners
-if (!hasTouchSupport) {
-    // Add mousemove listener if no touch support
-    window.addEventListener('mousemove', onMouseMove, false);
-} else {
-    // Add touchmove listener if touch support is detected
-    window.addEventListener('touchmove', onTouchMove, { passive: false });
-}
 
 window.onresize = function () {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -78,14 +47,17 @@ document.body.appendChild(renderer.domElement);
 
 let composer = new EffectComposer(renderer);
 composer.setSize(window.innerWidth, window.innerHeight);
+composer.setPixelRatio(window.devicePixelRatio);
+
+
 let renderPass = new RenderPass(scene, camera);
+
 composer.addPass(renderPass);
 
-let bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-composer.addPass(bloomPass);
-bloomPass.radius = .5;
-bloomPass.threshold = 2;
-bloomPass.strength = 1;
+
+// let bloomPass = new BloomPass(1, 12, 4);
+// composer.addPass(bloomPass);
+
 
 let outlinePass = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
 composer.addPass(outlinePass);
@@ -117,8 +89,8 @@ let item = JSON.parse(localStorage.getItem('item'));
 console.log(item);
 
 let controls = new OrbitControls(camera, renderer.domElement);
-controls.enablePan = false;
-controls.enableRotate = false;
+controls.enablePan = true;
+controls.enableRotate = true;
 controls.enableZoom = true;
 
 scene.add(camera); 
@@ -140,21 +112,21 @@ backLight.castShadow = true;
 // backLight.intensity = 4;
 backLight.position.set(2, 2, -2);
 backLight.lookAt(0, 0, 0);
-// scene.add(backLight);
+scene.add(backLight);
 
 let backLight2 = new THREE.SpotLight(0xffffff, 5, 10, 10, 0, 1);
 backLight2.castShadow = true;
 // backLight2.intensity = 4;
 backLight2.position.set(-2, -2, -2);
 backLight2.lookAt(0, 0, 0);
-// scene.add(backLight2);
+scene.add(backLight2);
 
 let backLight3 = new THREE.SpotLight(0xffffff, 5, 10, 10, 0, 1);
 backLight3.castShadow = true;
 // backLight3.intensity = 4;
 backLight3.position.set(0, 0, -2);
 backLight3.lookAt(0, 0, 0);
-// scene.add(backLight3);
+scene.add(backLight3);
 
 
 let sideLight = new THREE.SpotLight(0xffffff, 5, 10, 10, 0, 1);
@@ -328,10 +300,14 @@ async function loadCardContent(card, item) {
 
         // we need these keys to be in a specific order
         // all other keys will be added in the order they appear in the object
-        const orderedKeys = ['name', 'image', 'rarity', 'type'];
+        const orderedKeys = ['name', 'rarity', 'image', 'type', 'materials', 'enchantments', 'description'];
 
         item = Object.keys(item)
             .sort((a, b) => {
+                // Check if one of the keys is 'description' and sort it last
+                if (a === 'description') return 1; // Always sort 'description' as greater
+                if (b === 'description') return -1; // Always sort 'description' as lesser
+
                 const indexA = orderedKeys.indexOf(a);
                 const indexB = orderedKeys.indexOf(b);
                 if (indexA === -1 && indexB === -1) return 0; // Both keys are not in orderedKeys, keep their order
@@ -344,64 +320,82 @@ async function loadCardContent(card, item) {
                 return obj;
             }, {});
 
+        item.rarity = `${capitalize(item.rarity)} ${capitalizeWords(item.type)}`;
+        delete item.type;
         console.log(item);
+
 
 
         fontLoader.load('assets/font/volk.json', function (font) {
             Object.entries(item).forEach(([key, value], index) => {
                 console.log(key);
-                if (typeof value === 'object') {
-                    // If the value is an object, iterate over its properties
-                    Object.entries(value).forEach(([innerKey, innerValue]) => {
-                        
-                        let textLines = wrapText(`${capitalize(innerValue)}`, font, 0.1, maxWidth);
-                        textLines.forEach((line, i) => {
-                            buildText(line, 0x000000, content, yOffset, index, i, font, 0.1);
-                        });
-                        yOffset -= 0.2 * textLines.length; // Adjust Y offset for the next item
-                    });
-                } else {
-                    if(key === 'nameHex' || key === 'rarityHex') {
-                        yOffset += 0.2; // Skip the name and rarity
-                        return;
-                    }
-                    let skip = false;
-                    switch(key) {
-                        case 'name':
-                            size = 0.2;
-                            colour = item.nameHex;
-                            skip = false;
-                            break;
-                        case 'rarity':
-                            size = 0.15;
-                            colour = item.rarityHex;
-                            value = `${capitalize(value)} ${capitalizeWords(item.type)}`;
-                            skip = false;
+                if(key === 'nameHex' || key === 'rarityHex') {
+                    yOffset += 0.2; // Skip the name and rarity
+                    return;
+                }
+                let skip = false;
+                switch(key) {
+                    case 'name':
+                        size = 0.2;
+                        colour = item.nameHex;
+                        skip = false;
                         break;
-                        case 'type':
-                            skip = true;
-                            yOffset += 0.2;
-                            break;
-                        case 'image':
-                            skip = true;
-                            console.log(yOffset);
-                            let imgHeight = createImagePlane(value, content, yOffset, index);
-                            yOffset -= imgHeight - 0.2;
-                            console.log('imgHeight:', imgHeight);
-                            break;
-                        default:
-                            size = 0.1;
-                            colour = 0x000000;
-                            skip = false;
-                    }   
-                    if(!skip) {
-                        let textLines = wrapText(`${capitalize(value)}`, font, size, maxWidth);
-                        textLines.forEach((line, i) => {
-                            buildText(line, colour, content, yOffset, index, i, font, size, lh);
+                    case 'rarity':
+                        size = 0.15;
+                        yOffset += 0.15;
+                        colour = item.rarityHex;
+                        skip = false;
+                    break;
+                    case 'image':
+                        skip = true;
+                        console.log(yOffset);
+                        yOffset -= 0.2;
+                        let imgHeight = createImagePlane(value, content, yOffset, index);
+                        yOffset -= imgHeight - 0.2;
+                        console.log('imgHeight:', imgHeight);
+                        break;
+                    case 'materials':
+                        skip = false;
+                        colour = 0x000000;
+                        // value = key;
+                        yOffset += 0.2;
+                        break;
+                    case 'enchantments':
+                        skip = false;
+                        // value = key;
+                        yOffset += 0.2;
+                        break;
+                    default:
+                        size = 0.12;
+                        colour = 0x000000;
+                        skip = false;
+                        break;
+                }   
+                if(!skip) {
+                    let textLines = wrapText(`${capitalize(typeof value === 'string' ? value : key)}`, font, size, maxWidth);
+                    textLines.forEach((line, i) => {
+                        buildText(line, colour, content, yOffset, index, i, font, size, lh);
+                    });
+                    yOffset -= .3 * textLines.length; // Adjust Y offset for the next item
+                    
+                    if (typeof value === 'object') {
+                        yOffset -= 0.1; // Add a little extra space for the nested object
+                        if(key === 'enchantments') {
+                            yOffset -= 0.05;
+                        }
+                        Object.entries(value).forEach(([innerKey, innerValue]) => {
+
+                            let textLines = wrapText(`${capitalize(innerValue)}`, font, 0.1, maxWidth);
+                            textLines.forEach((line, i) => {
+                                buildText(line, 0x000000, content, yOffset, index, i, font, 0.1, 0.1, -0.8);
+                            });
+                            yOffset -= 0.2 * textLines.length;
                         });
-                        yOffset -= .2 * textLines.length; // Adjust Y offset for the next item
+                        
                     }
                 }
+                
+            
             });
 
             console.log(content);
@@ -426,7 +420,7 @@ async function loadCardContent(card, item) {
     
 }
 
-function buildText(text, colour, content, yOffset, index, lineIndex, font, size = 0.1, lh = 0.1) {
+function buildText(text, colour, content, yOffset, index, lineIndex, font, size = 0.1, lh = 0.1, xOffset = -0.9) {
     let textGeom = new TextGeometry(text, {
         font: font,
         size: size,
@@ -439,7 +433,7 @@ function buildText(text, colour, content, yOffset, index, lineIndex, font, size 
     let material = new THREE.MeshStandardMaterial({ color: colour, metalness: .5, roughness: 0.5 });
     let textMesh = new THREE.Mesh(textGeom, material);
     textMesh.castShadow = true;
-    textMesh.position.set(-0.9, yOffset - (index * lineHeight) - (lineIndex * lineHeight), .05); // Adjust position as needed
+    textMesh.position.set(xOffset, yOffset - (index * lineHeight) - (lineIndex * lineHeight), .05); // Adjust position as needed
     content.add(textMesh);
 }
 
@@ -507,7 +501,7 @@ let card = await createCard();
 
 scene.add(card);
 
-let cardFlip = true;
+let cardFlip = false;
 
 let flip = document.getElementById('flip');
 flip.addEventListener('click', function() {
@@ -516,19 +510,31 @@ flip.addEventListener('click', function() {
 
 
 let shareBtn = document.getElementById('share');
-shareBtn.addEventListener('click', function() {
+shareBtn.addEventListener('click', function(event) {
+    event.preventDefault();
     captureCameraView();
 });
 
 async function captureCameraView() {
 
-    card.quaternion.set(0, (Math.PI/36 ), 0, 1);
+    composer.setPixelRatio(window.devicePixelRatio * 2);
+
+    //we want a slightly random card quaternion
+    let random = (Math.random() * 0.5) - 0.25;
+
+    let quaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, random, 0, 'XYZ'));
+    card.quaternion.copy(quaternion);
+
+
     console.log(camera.position);
-    camera.position.set(0, 0, 6);
+    camera.position.set(0, random, card.content.contentSize.y);
+    console.log(camera.position);
     camera.lookAt(0, 0, 0);
 
     // Render the scene
-    renderer.render(scene, camera);
+    composer.render();
+
+    composer.setPixelRatio(window.devicePixelRatio);
 
 
     // Create an offscreen canvas and draw the rendered scene onto it
@@ -568,11 +574,15 @@ async function captureCameraView() {
 
     // Export the image from the new canvas
     let img = new Image();
+    img.onload = function() {
+        let a = document.createElement('a');
+        a.href = img.src;
+        a.download = `l00t_${item.name.replace(/\s/g, '_').toLowerCase()}.png`;
+        document.body.appendChild(a); // Temporarily add the link to the document
+        a.click();
+        document.body.removeChild(a); // Remove the link after triggering the download
+    };
     img.src = croppedCanvas.toDataURL('image/png');
-    let a = document.createElement('a');
-    a.href = img.src;
-    a.download = `l00t_${item.name.replace(/\s/g, '_').toLowerCase()}.png`;
-    a.click();
 }
 
 
@@ -658,32 +668,37 @@ function animate() {
     }
 
     // pan the camera slightly by moving the mouse
-    if(camera && mouse && card) {
-        if(targetMouse.x !== null || targetMouse.y !== null) {
-            // interpolate the mouse position
-            mouse.lerp(targetMouse, 0.05);
+    // if(camera && mouse && card) {
+    //     if(targetMouse.x !== null || targetMouse.y !== null) {
+    //         // interpolate the mouse position
+    //         mouse.lerp(targetMouse, 0.05);
 
-        }
-        // camera.position.x.lerp(mouse.x * 2, lerpFactor);
-        // camera.position.y.lerp(mouse.y * 2, lerpFactor);
-        const targetPosition = new THREE.Vector3(mouse.x * 2, mouse.y*2, camera.position.z);
-        scrollY *= 0.5;
-        camera.position.lerp(targetPosition, lerpFactor);
+    //     }
+    //     // camera.position.x.lerp(mouse.x * 2, lerpFactor);
+    //     // camera.position.y.lerp(mouse.y * 2, lerpFactor);
+    //     const targetPosition = new THREE.Vector3(mouse.x * 2, mouse.y*2, camera.position.z);
+    //     scrollY *= 0.5;
+    //     camera.position.lerp(targetPosition, lerpFactor);
 
-        const targetEuler = new THREE.Euler(mouse.y /4, cardFlip ? -mouse.x /4 : Math.PI - mouse.x /4, 0, 'XYZ');
-        const targetQuaternion = new THREE.Quaternion().setFromEuler(targetEuler);
+    //     const targetEuler = new THREE.Euler(mouse.y /4, cardFlip ? -mouse.x /4 : Math.PI - mouse.x /4, 0, 'XYZ');
+    //     const targetQuaternion = new THREE.Quaternion().setFromEuler(targetEuler);
         
-        card.quaternion.slerp(targetQuaternion, lerpFactor);
+    //     card.quaternion.slerp(targetQuaternion, lerpFactor);
 
-        camera.lookAt(new THREE.Vector3(mouse.x*2, mouse.y*2, 0));
+    //     camera.lookAt(new THREE.Vector3(mouse.x*2, mouse.y*2, 0));
 
         
 
+    // }
+
+    if(card) {
+        let cardEuler = new THREE.Euler(0, cardFlip ? Math.PI : 0, 0, 'XYZ');
+        let cardQuaternion = new THREE.Quaternion().setFromEuler(cardEuler);
+        card.quaternion.slerp(cardQuaternion, lerpFactor);
     }
     
 
     // camera.position.lerp(camRestPos, lerpFactor);
-
     composer.render();
     controls.update();
     // renderer.render(scene, camera);
