@@ -11,7 +11,7 @@ import { OutlinePass } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/pos
 import { FontLoader } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/geometries/TextGeometry.js';
 import { OutputPass } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/postprocessing/OutputPass.js';
-import { chatCompletion, imageCompletion } from './chat.js';
+import { chatCompletion, imageCompletion, imageViewBase64 } from './chat.js';
 import { Loot } from './loot.js';
 
 let scene = new THREE.Scene();
@@ -73,7 +73,7 @@ composer.addPass(outputPass);
 // itemOutline.edgeGlow = 1;
 // itemOutline.visibleEdgeColor = new THREE.Color(0xffaa00);
 
-let camLight = new THREE.PointLight(0xffffff, 20, 1000);
+let camLight = new THREE.PointLight(0xffffff, 0, 1000);
 camLight.position.set(camera.position.x, camera.position.y, camera.position.z); 
 camera.add(camLight); 
 scene.add(camera); 
@@ -267,6 +267,7 @@ The user can input real items, copyrighted items, or anything else they want. Yo
 End of instructions.
 `;
 
+
 function randomCharString(length) {
     let result = '';
     let characters = '0123456789';
@@ -287,6 +288,7 @@ let setupPage = 0;
 //     console.log('skipping key page');
 //     apiKey = localStorage.getItem('apiKey');
 // }
+
 let pages = document.getElementsByClassName('setupPage');
 for (let i = 0; i < pages.length; i++) {
     pages[i].style.display = 'none';
@@ -299,6 +301,7 @@ let pageOffset = 1;
 
 let shouldGenImg = false;
 let itemImg = null;
+let itemImgFile = null;
 
 let nextBtn = document.getElementById('next');
 nextBtn.addEventListener('click', async () => {
@@ -406,7 +409,7 @@ nextBtn.addEventListener('click', async () => {
         const itemPrompt = item ? JSON.stringify(item) : null;
 
         const chatObj = {
-            model: 'gpt-3.5-turbo',
+            model: 'gpt-4o',
             messages: [
                 { "role": "system", "content": lootPrompt},
                 { "role": "system", "content": "New L00T request recieved! The item fields provided are as follows:" },
@@ -421,20 +424,58 @@ nextBtn.addEventListener('click', async () => {
             ],
             response_format: { "type": "json_object" },
             seed: Math.floor(Math.random() * 1000),
-            temperature: 1.2,
+            // temperature: 1.2,
         };
 
-        console.log(chatObj.messages[2].content);
+        if(!shouldGenImg && itemImg) {
+           chatObj.messages.push({
+                role: 'user',
+                content: [
+                    {
+                        type: 'text',
+                        text: 'The user has uploaded an image of the item. Use the image, as well as any text description, as a basis for the item you create.',
+                    },
+                    {
+                        type: 'image_url',
+                        image_url: {
+                            url: `${itemImg}`
+                        }
+                    }
+                ]
+            })
+        }
 
-        let data = await chatCompletion(chatObj);
+        console.log(chatObj.messages);
+
+        let data;
+
+        // if(!shouldGenImg && itemImg && itemImgFile) {
+
+        //     let viewImgData = await imageViewBase64(itemImg);
+        //     if(viewImgData.error) {
+        //         alert('Unfortunately, there was an error processing the image. The page will reload. Please try again. If the issue persists, please contact support. ' + viewImgData.error.message);
+        //         // window.location.reload();
+        //         return;
+        //     }
+        //     let viewImg = viewImgData.choices[0].message.content;
+        //     // console.log(viewImg);
+        //     chatObj.messages.push({ "role": "user", "content": `The user has uploaded an image of the item. The image is described as follows. Use this, as well as any text description, as a basis for the item you create: ${viewImg}` });
+
+        //     data = await chatCompletion(chatObj);
+        //     console.log(data);
+        //     if(data.error) {
+        //         alert(data.error.message);
+        //         return;
+        //     }
+        
+            
+        // } else {
+            
+        // }
+        data = await chatCompletion(chatObj);
         console.log(data);
         if(data.error) {
             alert(data.error.message);
-            //refresh page
-            // if(data.error.code == 'invalid_api_key') {
-            //     localStorage.removeItem('apiKey');
-            // }
-            window.location.href = "./setup.html";
             return;
         }
         const response = JSON.parse(data.choices[0].message.content);
@@ -539,6 +580,7 @@ nextBtn.addEventListener('click', async () => {
 
             imageFileInput.addEventListener('change', async () => {
                 let file = imageFileInput.files[0];
+                itemImgFile = file;
                 let reader = new FileReader();
                 reader.readAsDataURL(file);
                 reader.onload = function() {
@@ -680,8 +722,7 @@ function animate() {
     }
 
     if(card) {
-        let distance = camera.position.distanceTo(card.position);
-        camLight.intensity = 4 * distance; 
+        camLight.intensity < 20 ? camLight.intensity += .01 : 20;
         card.rotation.y += delta /4;
         card.rotation.x += delta /6;
         card.rotation.z += delta /8;

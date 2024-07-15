@@ -44,7 +44,7 @@ export { imageCompletion };
 async function imageViewUrl(imageUrl, args, key, prev) {
     const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${key}`
+        // 'Authorization': `Bearer ${key}`
     };
 
     console.log('Start image view...');
@@ -53,7 +53,7 @@ async function imageViewUrl(imageUrl, args, key, prev) {
     args ? prompt = prompt + ` The user has provided the following additional prompt: ${args}` : prompt = prompt;
 
     const body = JSON.stringify({
-        model: 'gpt-4-vision-preview',
+        model: 'gpt-4o',
         messages: [
             {
                 role: 'user',
@@ -84,10 +84,10 @@ async function imageViewUrl(imageUrl, args, key, prev) {
 
 export { imageViewUrl };
 
-async function imageViewBase64(imageFile, input, key) {
+async function imageViewBase64(imageFile, input) {
     const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${key}`
+        // 'Authorization': `Bearer ${key}`
     };
 
     let imgPrompt = `You are identifying the contents of an image.`;
@@ -98,16 +98,16 @@ async function imageViewBase64(imageFile, input, key) {
 
     console.log('Start image view...');
 
-    const reader = new FileReader();
+    // const reader = new FileReader();
 
-    const base64Image = await new Promise((resolve, reject) => {
-        reader.onloadend = () => resolve(reader.result.split(',')[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(imageFile);
-    });
+    // const base64Image = await new Promise((resolve, reject) => {
+    //     reader.onloadend = () => resolve(reader.result.split(',')[1]);
+    //     reader.onerror = reject;
+    //     reader.readAsDataURL(imageFile);
+    // });
 
     const body = JSON.stringify({
-        model: 'gpt-4-vision-preview',
+        model: 'gpt-4o',
         messages: [
             {
                 role: 'user',
@@ -119,7 +119,7 @@ async function imageViewBase64(imageFile, input, key) {
                     {
                         type: 'image_url',
                         image_url: {
-                            url: `data:image/jpeg;base64,${base64Image}`
+                            url: `${imageFile}`
                         }
                     }
                 ]
