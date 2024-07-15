@@ -1,10 +1,10 @@
-const chatUrl = 'https://api.openai.com/v1/chat/completions';
-const imgUrl = 'https://api.openai.com/v1/images/generations';
+const chatUrl = '/.netlify/functions/netlify-chat';
+const imgUrl = '/.netlify/functions/netlify-image';
 
 async function chatCompletion(chatObj, key) {
     const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${key}`
+        // 'Authorization': `Bearer ${key}`
     };
 
     console.log('Start chat completion...');
@@ -24,7 +24,7 @@ export { chatCompletion };
 async function imageCompletion(imageObj, key) {
     const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${key}`
+        // 'Authorization': `Bearer ${key}`
     };
 
     console.log('Start image completion...');

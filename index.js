@@ -114,6 +114,10 @@ scene.add(camera);
 
 let controls = new OrbitControls(camera, renderer.domElement);
 controls.enablePan = false;
+controls.enableZoom = false;
+
+let chestDestination = null;
+let chestRotation = null;
 
 let loader = new GLTFLoader();
 loader.load('assets/chest/chestPerf.glb', function (gltf) {
@@ -121,6 +125,9 @@ loader.load('assets/chest/chestPerf.glb', function (gltf) {
     chest.scale.set(2, 2, 2);
     chest.rotation.y = Math.PI / -2;
     scene.add(chest);
+
+    chestDestination = chest.position.clone();
+    chestRotation = chest.rotation.clone();
     // let area = new THREE.RectAreaLight(0xffffff, .5, 1.5, .75);
     // area.intensity = 5;
     // area.position.set(0, -.1, 0);
@@ -157,12 +164,20 @@ loader.load('assets/sworddisp.glb', function (gltf) {
 
 });
 
+let l00tLight;
 loader.load('assets/l00t.glb', function (gltf) {
     let l00t = gltf.scene;
     l00t.position.set(0, 0.5, -3);
-    l00t.scale.set(3, 3, 3);
+    l00t.scale.set(2.5, 2.5, 2.5);
     l00t.rotation.y = Math.PI / -2;
+
+    l00tLight = new THREE.PointLight(0xffffff, 10, 100);
+    l00tLight.position.set(0, 1.5, -1);
+    camera.add(l00tLight);
+
     camera.add(l00t);
+
+
     // titleArea.target = l00t;
     // outlinePass.selectedObjects.push(l00t);
     l00t.traverse(function (node) {
@@ -179,22 +194,29 @@ loader.load('assets/l00t.glb', function (gltf) {
 
 let clock = new THREE.Clock();
 
+
+
+
 function animate() {
     let delta = clock.getDelta();
-    // stats.update();
 
     requestAnimationFrame(animate);
     controls.update();
-    renderer.render(scene, camera);
 
-    if (chest) {
+    
+    if (chest && l00tLight && chestPoint) {
         let distance = camera.position.distanceTo(chest.position);
         camLight.intensity = .8 * distance; 
-        time += .3 * delta;
+
         chest.rotation.y = 30 - Math.sin(time) / 2;
         chestPoint.position.x = -(Math.sin(time) /2)*1.2;
+        l00tLight.position.x = Math.sin(time/2);
+        
         chestPoint.intensity = chestPoint.intensity < 2 ? chestPoint.intensity + .01 : 2;
     }
+    time += .3 * delta;
+
+    camera.position.lerp(new THREE.Vector3(0, 1, 4), .005);
 
     // titleHelper.update();
 

@@ -24,6 +24,11 @@
       src: url(assets/font/volk.ttf);
     }
 
+    @font-face {
+      font-family: 'otherFont';
+      src: url(assets/font/l00t.ttf);
+    }
+
     * {
       box-sizing: border-box;
       font-family: 'l00t';
@@ -400,25 +405,30 @@
       text-transform: capitalize;
   }
 
+  .loot {
+    font-family: 'otherFont';
+  }
+
   </style>
   <body>
     <div id="fade-overlay"></div>
     
     <div id="setupPagesContainer">
       <div class="setupPage keyPage">
-        <p>L00T uses generative AI to create unique items.<br><br>You can customise as much or as little as you want to design a specific item, or let the AI surprise you.</p>
-        <br>
+        <p><span class="loot">L00T</span> uses generative AI to create unique items.<br><br>You can customise as much or as little as you want to design a specific item, or let the AI surprise you.</p>
+        <!-- <br>
         <input type="text" id="apiKeyInput" placeholder="API Key">
         <input type="hidden" id="apiKey" value="null">
         <p style="font-size: .8rem;"><i> Disclaimer: Your API is stored client-side using localStorage. It is your responsibility to keep it secure and place limits on its use.</i></p>
+       -->
       </div>
 
       <div class="setupPage customPage">
-        <p>I want my item to be...</p>
+        <p>I want my <span class="loot">L00T</span> to be...</p>
         <div id="itemChoice">
           <div class="typechoice">
             <button id="custom">Custom</button>
-            <p>You choose the type of item and its properties.</p>
+            <p>Design your own <span class="loot">L00T</span>.</p>
           </div>
           <div class="typechoice">
             <button id="random" class="active">A Surprise</button>
@@ -429,34 +439,34 @@
       </div>
 
       <div class="setupPage itemKey">
-        <p>What is the name of your item?</p>
+        <p>What is the name of your <span class="loot">L00T</span>?</p>
         <input type="text" id="itemName" placeholder="Excalibur" autocomplete="off">
         <input type="hidden" id="name" value="random">
         <p>Leave blank for a random name.</p>
       </div>
 
       <div class="setupPage itemKey">
-        <p>What type of item is it?</p>
+        <p>What type of <span class="loot">L00T</span> is it?</p>
         <input type="text" id="itemType" placeholder="Sword" autocomplete="off">
         <input type="hidden" id="type" value="random">
         <p>Leave blank for a random type.</p>
       </div>
 
       <div class="setupPage itemKey">
-        <p>How rare is your item?</p>
+        <p>How rare is your <span class="loot">L00T</span>?</p>
         <input type="text" id="rarity" placeholder="Legendary" autocomplete="off">
         <input type="hidden" id="rarity" value="random">
         <p>Leave blank for a random rarity.</p>
       </div>
 
       <div class="setupPage itemKey">
-        <p>Describe any extra details or properties of your item. <br> These could be magical effects, historical significance, or anything else you can think of. <br> You can include visual details, but you can also leave that to the AI. The AI will use this description to help generate your item.</p>
+        <p>Describe any extra details or properties of your <span class="loot">L00T</span>. <br> These could be magical effects, historical significance, etc.</p>
         <input type="text" id="description" placeholder="Once wielded by king..." autocomplete="off">
         <input type="hidden" id="description" value="random">
         <p>Leave blank for a random description.</p>
       </div>
       <div class="setupPage imgPage">
-        <p>Give your item an image? You can AI-generate a portrait or upload your own.</p>
+        <p>Give your <span class="loot">L00T</span> a portrait? You can AI-generate a portrait or upload your own.</p>
         <input type="file" id="imageFile" accept="image/*" style="display: none;">
         <button id="genImg">Generate Image</button>
         <button id="uploadImg">Upload Image</button>

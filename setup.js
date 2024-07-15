@@ -282,11 +282,11 @@ let item;
 
 let setupPage = 0;
 //skip key page if key is already set
-if(localStorage.getItem('apiKey')) {
-    setupPage = 1;
-    console.log('skipping key page');
-    apiKey = localStorage.getItem('apiKey');
-}
+// if(localStorage.getItem('apiKey')) {
+//     setupPage = 1;
+//     console.log('skipping key page');
+//     apiKey = localStorage.getItem('apiKey');
+// }
 let pages = document.getElementsByClassName('setupPage');
 for (let i = 0; i < pages.length; i++) {
     pages[i].style.display = 'none';
@@ -308,31 +308,29 @@ nextBtn.addEventListener('click', async () => {
 
     console.log(item);
 
-    
+    // if(currPage.classList.contains('keyPage')) {
+    //     let apiKeyInput = document.getElementById('apiKeyInput');
+    //     let key = apiKeyInput.value;
 
-    if(currPage.classList.contains('keyPage')) {
-        let apiKeyInput = document.getElementById('apiKeyInput');
-        let key = apiKeyInput.value;
-
-        if(localStorage.getItem('apiKey') !== null) {
-            apiKey = localStorage.getItem('apiKey');
-        } else {
-            if(key === undefined || key === null || key.trim() === '') {
-                console.log('Key is blank or undefined');
-                apiKeyInput.style.boxShadow = 'inset 0px 0px 0px 2px red';
-                apiKeyInput.placeholder = 'Please enter a valid key';
-                return;
-            } else {
-                apiKeyInput.style.boxShadow = 'none';
-                apiKeyInput.placeholder = 'API Key';
-                apiKey = key;
-                localStorage.setItem('apiKey', key);
-            }
-        }
+    //     if(localStorage.getItem('apiKey') !== null) {
+    //         apiKey = localStorage.getItem('apiKey');
+    //     } else {
+    //         if(key === undefined || key === null || key.trim() === '') {
+    //             console.log('Key is blank or undefined');
+    //             apiKeyInput.style.boxShadow = 'inset 0px 0px 0px 2px red';
+    //             apiKeyInput.placeholder = 'Please enter a valid key';
+    //             return;
+    //         } else {
+    //             apiKeyInput.style.boxShadow = 'none';
+    //             apiKeyInput.placeholder = 'API Key';
+    //             apiKey = key;
+    //             localStorage.setItem('apiKey', key);
+    //         }
+    //     }
 
         
 
-    }
+    // }
 
     if(currPage.classList.contains('customPage')) {
         let imgPage = Array.from(pages).find(page => page.classList.contains('imgPage'));
@@ -428,14 +426,14 @@ nextBtn.addEventListener('click', async () => {
 
         console.log(chatObj.messages[2].content);
 
-        let data = await chatCompletion(chatObj, apiKey);
+        let data = await chatCompletion(chatObj);
         console.log(data);
         if(data.error) {
             alert(data.error.message);
             //refresh page
-            if(data.error.code == 'invalid_api_key') {
-                localStorage.removeItem('apiKey');
-            }
+            // if(data.error.code == 'invalid_api_key') {
+            //     localStorage.removeItem('apiKey');
+            // }
             window.location.href = "./setup.html";
             return;
         }
@@ -451,7 +449,7 @@ nextBtn.addEventListener('click', async () => {
                 response_format: "b64_json"
             };
 
-            await imageCompletion(image, apiKey).then(data => {
+            await imageCompletion(image).then(data => {
                 console.log(data);
                 if(data.error) {
                     alert(data.error.message);
@@ -500,8 +498,6 @@ nextBtn.addEventListener('click', async () => {
         return;
 
     }
-
-    currPage = pages[setupPage];
 
     lastPage = currPage == pages[(pages.length - 1) - pageOffset] ? true : false;
 
@@ -556,6 +552,9 @@ nextBtn.addEventListener('click', async () => {
         pages[i].style.display = 'none';
         if(i == setupPage) {
             pages[i].style.display = 'block';
+            if(pages[i].querySelector('input[type="text"]')) {
+                pages[i].querySelector('input[type="text"]').focus();
+            }
         }
     }
     
@@ -580,6 +579,15 @@ function colorItems() {
         }
     });
 }
+
+let textInputs = document.querySelectorAll('input[type="text"]');
+textInputs.forEach(input => {
+    input.addEventListener('keydown', function(event) {
+        if(event.key == 'Enter') {
+            nextBtn.click();
+        }
+    });
+});
 
 
 let backBtn = document.getElementById('back');
