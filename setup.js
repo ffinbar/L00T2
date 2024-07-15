@@ -480,6 +480,11 @@ nextBtn.addEventListener('click', async () => {
             window.location.reload();
             return;
         }
+        if(data.errorMessage) {
+            alert('Unfortunately, there was an error processing the item. The page will reload. Please try again. If the issue persists, please contact support. ' + data.errorMessage);
+            window.location.reload();
+            return;
+        }
         const response = JSON.parse(data.choices[0].message.content);
         console.log(response);
 
