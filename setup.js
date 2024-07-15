@@ -424,6 +424,7 @@ nextBtn.addEventListener('click', async () => {
             ],
             response_format: { "type": "json_object" },
             seed: Math.floor(Math.random() * 1000),
+            max_tokens: 300,
             // temperature: 1.2,
         };
 
@@ -481,7 +482,7 @@ nextBtn.addEventListener('click', async () => {
             return;
         }
         if(data.errorMessage) {
-            alert('Unfortunately, there was an error processing the item. The page will reload. Please try again. If the issue persists, please contact support. ' + data.errorMessage);
+            alert('The request timed out. Try again and choose either Generate Image or No Image. We are working on a solution! ' + data.errorMessage);
             window.location.reload();
             return;
         }
@@ -501,6 +502,7 @@ nextBtn.addEventListener('click', async () => {
                 console.log(data);
                 if(data.error) {
                     alert('Unfortunately, there was an error processing the image. The page will reload. Please try again. If the issue persists, please contact support. ' + data.error.message);
+                    window.location.reload();
                     return;
                 }
                 response.image = 'data:image/png;base64,' + data.data[0].b64_json;
@@ -587,12 +589,14 @@ nextBtn.addEventListener('click', async () => {
 
             imageFileInput.addEventListener('change', async () => {
                 let file = imageFileInput.files[0];
-                itemImgFile = file;
-                let reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = function() {
-                    itemImg = reader.result;
-                };
+                downscaleImage(file, 256, 256, 0.8, function(downscaledFile) {
+                    console.log(file.size, downscaledFile.size);
+                    let reader = new FileReader();
+                    reader.readAsDataURL(downscaledFile);
+                    reader.onload = function() {
+                        itemImg = reader.result;
+                    };
+                });
             });
 
         });
@@ -611,6 +615,44 @@ nextBtn.addEventListener('click', async () => {
     
     
 });
+
+function downscaleImage(file, maxWidth, maxHeight, quality, callback) {
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+    img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        // Calculate the new dimensions based on maxWidth and maxHeight
+        if (width > height) {
+            if (width > maxWidth) {
+                height *= maxWidth / width;
+                width = maxWidth;
+            }
+        } else {
+            if (height > maxHeight) {
+                width *= maxHeight / height;
+                height = maxHeight;
+            }
+        }
+
+        // Draw the image on canvas
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Convert canvas to a Blob, then to a File
+        canvas.toBlob(blob => {
+            const downscaledFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now()
+            });
+            callback(downscaledFile);
+        }, 'image/jpeg', quality);
+    };
+}
 
 function colorItems() {
     const items = document.querySelectorAll('.item');
