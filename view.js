@@ -320,11 +320,15 @@ async function loadCardContent(card, item) {
                 return obj;
             }, {});
 
+        Object.entries(item).forEach(([key, value]) => {
+            if (value === '' || (typeof value === 'object' && Object.keys(value).length === 0)) {
+                delete item[key];
+            }
+        });
+
         item.rarity = `${capitalize(item.rarity)} ${capitalizeWords(item.type)}`;
         delete item.type;
         console.log(item);
-
-
 
         fontLoader.load('assets/font/volk.json', function (font) {
             Object.entries(item).forEach(([key, value], index) => {
