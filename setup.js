@@ -438,7 +438,8 @@ nextBtn.addEventListener('click', async () => {
                     {
                         type: 'image_url',
                         image_url: {
-                            url: `${itemImg}`
+                            url: `${itemImg}`,
+                            detail: 'low'
                         }
                     }
                 ]
@@ -475,7 +476,8 @@ nextBtn.addEventListener('click', async () => {
         data = await chatCompletion(chatObj);
         console.log(data);
         if(data.error) {
-            alert(data.error.message);
+            alert('Unfortunately, there was an error processing the item. The page will reload. Please try again. If the issue persists, please contact support. ' + data.error.message);
+            window.location.reload();
             return;
         }
         const response = JSON.parse(data.choices[0].message.content);
@@ -493,7 +495,7 @@ nextBtn.addEventListener('click', async () => {
             await imageCompletion(image).then(data => {
                 console.log(data);
                 if(data.error) {
-                    alert(data.error.message);
+                    alert('Unfortunately, there was an error processing the image. The page will reload. Please try again. If the issue persists, please contact support. ' + data.error.message);
                     return;
                 }
                 response.image = 'data:image/png;base64,' + data.data[0].b64_json;
