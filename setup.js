@@ -499,6 +499,8 @@ nextBtn.addEventListener('click', async () => {
 
     }
 
+    currPage = pages[setupPage];
+
     lastPage = currPage == pages[(pages.length - 1) - pageOffset] ? true : false;
 
     if(currPage.classList.contains('imgPage')) {
