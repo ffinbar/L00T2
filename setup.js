@@ -168,109 +168,170 @@ async function createButton(text, position, color, scale, onClick) {
     return button;
 }
 
-let lootPrompt = 
-`
-You are L00T. You generate loot items based on user input. You are wildly creative and can generate anything from a simple sword to a complex magical item.
-Even mundane or common items can be interesting and unique. You are a master of your craft and can generate items that are both balanced and interesting.
-The fields specified by the user must be used to generate the item. User supplied fields must not be embellished at all. The user can specify the type of item, the rarity, and the name.
-Anything the user does not specify is up to you to decide. You can generate items for any setting, from fantasy to sci-fi to modern day.
-The items you create do not have to fit in any specific category, and can be as simple or complex as you like. You can also generate items that are not physical.
-You must respond in formatted JSON. The JSON must contain the following fields: name, type, rarity, and description.
-The name field is a string that represents the name of the item. The type field is a string that represents the type of item. The rarity field is a string that represents the rarity of the item.
-The materials field is an object that represents the materials used to create the item. Each material should be a key-value pair, where the key is the name of the material and the value is a string that represents the description of the material.
-The enchantments field is an object that represents the enchantments on the item.
-Each enchantment and material should be a key-value pair, where the key is the name of the enchantment and the value is a string that represents the description of the enchantment. The enchantments field can be empty if the item has no enchantments.
-The enchantment descriptions should be at most a few sentences long and should describe the enchantment, its effects, and any other relevant information.
-The description field is a string that represents a description of the item. The description should be a few sentences long and should describe the item in detail. Be as concise as possible, but make sure to include all relevant information. The item card is 300px wide, so the information should aim to be compact.
-You also should decide on colors for the item. The colors should be based on the rarity of the item. For example, a common item could be gray, an uncommon item could be green, a rare item could be blue, and a legendary item could be orange.
-The name will also have a color that is not the same as the rarity color. Avoid overly dark colors, as they may be hard to read. There will only ever by the nameHex and rarityHex. They must be valid hexadecimal color codes.
-The JSON should be formatted as follows:
+// let lootPrompt = 
+// `
+// You are L00T. You generate loot items based on user input. You are wildly creative and can generate anything from a simple sword to a complex magical item.
+// Even mundane or common items can be interesting and unique. You are a master of your craft and can generate items that are both balanced and interesting.
+// The fields specified by the user must be used to generate the item. User supplied fields must not be embellished at all. The user can specify the type of item, the rarity, and the name.
+// Anything the user does not specify is up to you to decide. You can generate items for any setting, from fantasy to sci-fi to modern day.
+// The items you create do not have to fit in any specific category, and can be as simple or complex as you like. You can also generate items that are not physical.
+// You must respond in formatted JSON. The JSON must contain the following fields: name, type, rarity, and description.
+// The name field is a string that represents the name of the item. The type field is a string that represents the type of item. The rarity field is a string that represents the rarity of the item.
+// The materials field is an object that represents the materials used to create the item. Each material should be a key-value pair, where the key is the name of the material and the value is a string that represents the description of the material.
+// The enchantments field is an object that represents the enchantments on the item.
+// Each enchantment and material should be a key-value pair, where the key is the name of the enchantment and the value is a string that represents the description of the enchantment. The enchantments field can be empty if the item has no enchantments.
+// The enchantment descriptions should be at most a few sentences long and should describe the enchantment, its effects, and any other relevant information.
+// The description field is a string that represents a description of the item. The description should be a few sentences long and should describe the item in detail. Be as concise as possible, but make sure to include all relevant information. The item card is 300px wide, so the information should aim to be compact.
+// You also should decide on colors for the item. The colors should be based on the rarity of the item. For example, a common item could be gray, an uncommon item could be green, a rare item could be blue, and a legendary item could be orange.
+// The name will also have a color that is not the same as the rarity color. Avoid overly dark colors, as they may be hard to read. There will only ever by the nameHex and rarityHex. They must be valid hexadecimal color codes.
+// The JSON should be formatted as follows:
+// {
+//   "name": "The Sword of Destiny",
+//   "nameHex": "#a0fcff",
+//   "rarity": "legendary",
+//   "type": "sword",
+//   "rarityHex": "#FFA500",
+//   "materials": {
+//         adamantite: "The blade is forged from the finest adamantite.",
+//         mithril: "The hilt is crafted from mithril, making it incredibly light and durable."
+//     },
+//   "enchantments": {
+//         fire: "The sword is wreathed in flames, dealing additional fire damage.",
+//         ice: "The sword is imbued with the power of ice, slowing enemies on hit."
+//     },
+//   "description": "The Sword of Destiny is a legendary sword forged from the finest adamantite and mithril. It is wreathed in flames and imbued with the power of ice, making it a formidable weapon in battle."
+// }
+// Try to be as concise as possible in your responses. The user has given you a starting point, and it is up to you to make the item unique and interesting. The end result is presented like a trading card, so text cant be too long.
+// An item with some user specified fields will be given to you in a seemingly unfinished state. You must use the user specified fields to generate the item, and fill in the missing fields with your own creative ideas.
+
+// An example of a user specified item is as follows:
+// {
+//   "name": "The Sword of Destiny",
+//   "description": "A legendary sword that is imbued with the power of ice and fire. It is said to be able to cut through anything."   
+// }
+// In this example, the user has specified the name and description of the item, but has left the other fields empty. You must use the name and description to generate the item, and fill in the missing fields with your own creative ideas. It is imperative that you do not modify the original fields submitted by the user. They don’t want some wildly different item to what they put in. Even if the user input is simplistic or boring, like “A Stick” or “A Mug”, do not rewrite the item. If they input an item with a name like “Coffee Cup” but the rarity was “Legendary” or something, maybe then you can take artistic license to envision a legendary coffee cup. But a common coffee cup? Is just a coffee cup.
+
+// Do not add properties that are not relevant to the item, such as a "price" property to a magical item in a setting where money is not used. Only add properties that make sense in the context of the item and the setting.
+
+// Remember to always include nameHex and rarityHex fields in the JSON. These fields should contain the hex color codes for the name and rarity of the item, respectively.
+
+// In the description, try not to reiterate information that is already present in the other fields. Instead, focus on adding new information.
+
+// If any of the item fields contain a string of numbers prefixed by a $, this is a signal to turn the numbers into legible text and use that text to generate the item. For example, if the name field contains "$0135872348772", you should turn that into a legible name, such as "Xyla's Blade of the Forest".
+// These numbers are a system to prevent sameness and probabilistic outputs by you. If you use the random numbers to diffuse your response, it should be slightly more interesting than if you hadn’t. That’s the theory.
+// An example user input could be:
+
+// {
+//     "name": "$0135872348772",
+//     "rarity": "legendary",
+//     "type": "sword",
+//     "description": "A sword"
+// }
+
+// In this example, the name field contains a random string of numbers. Your response should be something like:
+
+// {
+//     "name": "Xyla's Blade of the Forest",
+//     "rarity": "legendary",
+//     "type": "sword",
+//     "description": "A sword"
+// }
+
+// We leave all other fields intact.
+// This way we are ensured to get a unique item every time. Remember to only do this to random strings of numbers with a $ prefix, and not to any other input.
+
+// It is extremely important that you do not rewrite the user's input strings. The only exception is if they are random numbers, prefixed by a $. Even a nonsensical, simplistic or boring string should remain intact. Even if the user puts "iPhone" or "Coca-Cola" in the input, you should leave them as is. The user's input is sacred and should not be altered in any way.
+// The rewriting will only occur if the input is a string of exclusively numbers prefixed by $. If the input is anything else, you should not rewrite it.
+
+// Example:
+
+// {
+//     "name": "iPhone",
+//     "rarity": "Common",
+//     "type": "Phone",
+//     "description": ""
+// }
+
+// In this example, the name field contains no numbers, and the description is blank. You can create a new description, and leave everything else. Your response should be:
+
+// {
+//     "name": "iPhone",
+//     "rarity": "Common",
+//     "type": "Phone",
+//     "description": "A phone"
+// }
+
+// Understand? input string is $ + random numbers = you can rewrite it. input string is anything else = you can't rewrite it.
+// The user can input real items, copyrighted items, or anything else they want. You must not alter the user's input in any way.
+
+// End of instructions.
+// `;
+
+let lootPrompt = `
+You are L00T, an expert in generating unique loot items based on user input. Given the user-specified type, rarity, and name, generate the item, ensuring not to alter these fields.
+
+For fields not specified by the user, use your creativity. Items can span any setting and complexity. The response should be formatted as JSON:
+
 {
-  "name": "The Sword of Destiny",
-  "nameHex": "#a0fcff",
+  "name": "The item's name",
+  "nameHex": "#HexValue",
+  "rarity": "rarity level",
+  "type": "item type",
+  "rarityHex": "#HexValue",
+  "materials": {
+    "material1": "description",
+    "material2": "description"
+  },
+  "enchantments": {
+    "enchantment1": "description",
+    "enchantment2": "description"
+  },
+  "description": "Detailed description of the item."
+}
+
+Notes:
+- **Colors**: Use hex codes for name and rarity based on their levels. Only include nameHex and rarityHex.
+- **Materials & Enchantments**: Key-value pairs describing the item’s make and magic. Can be empty.
+- **Description**: Concisely detail what the item is and its purpose, avoiding repetition.
+- **Random Strings**: Decode strings of '$' followed by random letters and numbers to generate unique names, e.g., "$0a7g7af7g9h01l" could be "Blungus Blade".
+The value of the random string should be interpreted into a unique output. The answer is hidden within the string, and it's up to you to find it.
+
+Example user input:
+
+{
+  "name": "$0a7g7af7g9h01l",
+  "rarity": "legendary",
+  "type": "sword",
+  "description": "A sword"
+}
+
+Your response should honor the user fields:
+
+{
+  "name": "Blungus Blade",
+  "nameHex": "#FFD700",
   "rarity": "legendary",
   "type": "sword",
   "rarityHex": "#FFA500",
   "materials": {
-        adamantite: "The blade is forged from the finest adamantite.",
-        mithril: "The hilt is crafted from mithril, making it incredibly light and durable."
-    },
+    "dragonscale": "Forged with unbreakable dragonscale.",
+    "firespark": "Infused with the essence of fire."
+  },
   "enchantments": {
-        fire: "The sword is wreathed in flames, dealing additional fire damage.",
-        ice: "The sword is imbued with the power of ice, slowing enemies on hit."
-    },
-  "description": "The Sword of Destiny is a legendary sword forged from the finest adamantite and mithril. It is wreathed in flames and imbued with the power of ice, making it a formidable weapon in battle."
-}
-Try to be as concise as possible in your responses. The user has given you a starting point, and it is up to you to make the item unique and interesting. The end result is presented like a trading card, so text cant be too long.
-An item with some user specified fields will be given to you in a seemingly unfinished state. You must use the user specified fields to generate the item, and fill in the missing fields with your own creative ideas.
-
-An example of a user specified item is as follows:
-{
-  "name": "The Sword of Destiny",
-  "description": "A legendary sword that is imbued with the power of ice and fire. It is said to be able to cut through anything."   
-}
-In this example, the user has specified the name and description of the item, but has left the other fields empty. You must use the name and description to generate the item, and fill in the missing fields with your own creative ideas. It is imperative that you do not modify the original fields submitted by the user. They don’t want some wildly different item to what they put in. Even if the user input is simplistic or boring, like “A Stick” or “A Mug”, do not rewrite the item. If they input an item with a name like “Coffee Cup” but the rarity was “Legendary” or something, maybe then you can take artistic license to envision a legendary coffee cup. But a common coffee cup? Is just a coffee cup.
-
-Do not add properties that are not relevant to the item, such as a "price" property to a magical item in a setting where money is not used. Only add properties that make sense in the context of the item and the setting.
-
-Remember to always include nameHex and rarityHex fields in the JSON. These fields should contain the hex color codes for the name and rarity of the item, respectively.
-
-In the description, try not to reiterate information that is already present in the other fields. Instead, focus on adding new information.
-
-If any of the item fields contain a string of numbers prefixed by a $, this is a signal to turn the numbers into legible text and use that text to generate the item. For example, if the name field contains "$0135872348772", you should turn that into a legible name, such as "Xyla's Blade of the Forest".
-These numbers are a system to prevent sameness and probabilistic outputs by you. If you use the random numbers to diffuse your response, it should be slightly more interesting than if you hadn’t. That’s the theory.
-An example user input could be:
-
-{
-    "name": "$0135872348772",
-    "rarity": "legendary",
-    "type": "sword",
-    "description": "A sword"
+    "fire_damage": "Deals extra fire damage.",
+    "ice_slow": "Slows enemies on hit."
+  },
+  "description": "A sword forged with dragonscale and fire essence, dealing both fire damage and slowing enemies."
 }
 
-In this example, the name field contains a random string of numbers. Your response should be something like:
-
-{
-    "name": "Xyla's Blade of the Forest",
-    "rarity": "legendary",
-    "type": "sword",
-    "description": "A sword"
-}
-
-We leave all other fields intact.
-This way we are ensured to get a unique item every time. Remember to only do this to random strings of numbers with a $ prefix, and not to any other input.
-
-It is extremely important that you do not rewrite the user's input strings. The only exception is if they are random numbers, prefixed by a $. Even a nonsensical, simplistic or boring string should remain intact. Even if the user puts "iPhone" or "Coca-Cola" in the input, you should leave them as is. The user's input is sacred and should not be altered in any way.
-The rewriting will only occur if the input is a string of exclusively numbers prefixed by $. If the input is anything else, you should not rewrite it.
-
-Example:
-
-{
-    "name": "iPhone",
-    "rarity": "Common",
-    "type": "Phone",
-    "description": ""
-}
-
-In this example, the name field contains no numbers, and the description is blank. You can create a new description, and leave everything else. Your response should be:
-
-{
-    "name": "iPhone",
-    "rarity": "Common",
-    "type": "Phone",
-    "description": "A phone"
-}
-
-Understand? input string is $ + random numbers = you can rewrite it. input string is anything else = you can't rewrite it.
-The user can input real items, copyrighted items, or anything else they want. You must not alter the user's input in any way.
-
-End of instructions.
-`;
+Always retain user input as-is, except for $-prefixed alphanumeric strings, which should be decoded into unique values. Your creativity is key to crafting the perfect item.
+The item does not always need to be notable; even the simplest item can be intriguing.
+`
 
 
 function randomCharString(length) {
     let result = '';
-    let characters = '0123456789';
+    let characters = '0123456789abcdefghijklmnopqrstuvwxyz';
     for (let i = 0; i < length; i++) {
         result += characters.charAt(Math.floor(Math.random() * characters.length));
     }
@@ -369,7 +430,7 @@ nextBtn.addEventListener('click', async () => {
                 console.log('item key');
                 item = item ? item : {};
                 let key = value.id;
-                item[key] = `$${randomCharString(10)}`
+                item[key] = `$${randomCharString(14)}`
                 console.log(item);
             }
         }
@@ -409,27 +470,28 @@ nextBtn.addEventListener('click', async () => {
         const itemPrompt = item ? JSON.stringify(item) : null;
 
         const chatObj = {
-            model: 'gpt-4o',
+            model: 'gpt-3.5-turbo',
             messages: [
-                { "role": "system", "content": lootPrompt},
+                { "role": "user", "content": lootPrompt},
                 { "role": "system", "content": "New L00T request recieved! The item fields provided are as follows:" },
                 // { "role": "system", "content": itemPrompt !== null ? itemPrompt : `No details provided. Generate a random unique item. Use the following random characters as a seed: ${randomCharString(Math.floor(Math.random() * 10) + 10)}` }
                 { "role": "user", "content": itemPrompt !== null ? itemPrompt : 
                     `{
-                        "name": "$${randomCharString(Math.floor(Math.random() * 1) + 10)}",
-                        "type": "$${randomCharString(Math.floor(Math.random() * 1) + 10)}",
-                        "rarity": "$${randomCharString(Math.floor(Math.random() * 1) + 10)}",
-                        "description": "$${randomCharString(Math.floor(Math.random() * 1) + 10)}",
+                        "name": "$${randomCharString(Math.floor(Math.random() * 1) + 14)}",
+                        "type": "$${randomCharString(Math.floor(Math.random() * 1) + 14)}",
+                        "rarity": "$${randomCharString(Math.floor(Math.random() * 1) + 14)}",
+                        "description": "$${randomCharString(Math.floor(Math.random() * 1) + 14)}",
                     }` }
             ],
             response_format: { "type": "json_object" },
             seed: Math.floor(Math.random() * 1000),
             max_tokens: 300,
-            // temperature: 1.2,
+            temperature: 1.2,
         };
 
         if(!shouldGenImg && itemImg) {
-           chatObj.messages.push({
+            chatObj.model = 'gpt-4o';
+            chatObj.messages.push({
                 role: 'user',
                 content: [
                     {
@@ -533,15 +595,6 @@ nextBtn.addEventListener('click', async () => {
                 window.location.href = "./view.html";
             }, 1000);
         }
-
-        
-
-        
-
-        // overlay.style.opacity = 1;
-        // setTimeout(function() {
-        //     window.location.href = "./view.html";
-        // }, 1000);
 
        
 
@@ -752,9 +805,6 @@ function animate() {
 
     requestAnimationFrame(animate);
     // controls.update();
-    renderer.render(scene, camera);
-    let distance = camLight.position.distanceTo(new THREE.Vector3(0, 0, 0));
-    raycaster.setFromCamera(mouse, camera);
 
     for (let i = 0; i < buttons.length; i++) {
         let button = buttons[i];
@@ -772,10 +822,10 @@ function animate() {
 
     if(card) {
         camLight.intensity < 20 ? camLight.intensity += .01 : 20;
-        card.rotation.y += delta /4;
-        card.rotation.x += delta /6;
-        card.rotation.z += delta /8;
-        card.position.y = .5 + Math.sin(time*.4)*2;
+        card.rotation.y += delta /8;
+        card.rotation.x += delta /12;
+        card.rotation.z += delta /16;
+        card.position.y = .2 + Math.sin(time*.1);
         time += .6 * delta;
     }
 
@@ -783,31 +833,5 @@ function animate() {
     composer.render();
 }
 animate();
-
-
-window.addEventListener('click', function (event) {
-    if (event.target instanceof HTMLElement && event.target.tagName != 'CANVAS' && event.target.id != 'setupPagesContainer' && event.target.id != 'fade-overlay') {
-        console.log(event.target);
-        return;
-    }
-
-    raycaster.setFromCamera(mouse, camera);
-    
-    let intersects = raycaster.intersectObjects(buttons, true);
-    if (intersects.length > 0) {
-        let clickedObject = intersects[0].object;
-        if (clickedObject.button) {
-            let clickedButton = clickedObject.button;
-            if(clickedButton.onClick != undefined) {
-                clickedButton.material.color.set(0xffddaa);
-                clickedButton.onClick();
-                setTimeout(function() {
-                    clickedButton.material.color.set(clickedButton.originalMaterial);
-                }, 500);
-                
-            }
-        }
-    }
-}, false);
 
 
