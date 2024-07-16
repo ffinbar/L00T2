@@ -474,7 +474,6 @@ nextBtn.addEventListener('click', async () => {
             messages: [
                 { "role": "user", "content": lootPrompt},
                 { "role": "system", "content": "New L00T request recieved! The item fields provided are as follows:" },
-                // { "role": "system", "content": itemPrompt !== null ? itemPrompt : `No details provided. Generate a random unique item. Use the following random characters as a seed: ${randomCharString(Math.floor(Math.random() * 10) + 10)}` }
                 { "role": "user", "content": itemPrompt !== null ? itemPrompt : 
                     `{
                         "name": "$${randomCharString(Math.floor(Math.random() * 1) + 14)}",
@@ -485,7 +484,7 @@ nextBtn.addEventListener('click', async () => {
             ],
             response_format: { "type": "json_object" },
             seed: Math.floor(Math.random() * 1000),
-            max_tokens: 300,
+            max_tokens: 500,
             temperature: 1.2,
         };
 
@@ -548,7 +547,15 @@ nextBtn.addEventListener('click', async () => {
             window.location.reload();
             return;
         }
-        const response = JSON.parse(data.choices[0].message.content);
+        let response;
+        try {
+            response = JSON.parse(data.choices[0].message.content);
+        } catch (e) {
+            console.error('Failed to parse JSON response:', e);
+            alert('There was an error processing the AI response. The window will no reload. Please try again.');
+            window.location.reload();
+            return;
+        }
         console.log(response);
 
         if (shouldGenImg) {
@@ -569,13 +576,9 @@ nextBtn.addEventListener('click', async () => {
                 }
                 response.image = 'data:image/png;base64,' + data.data[0].b64_json;
                 localStorage.setItem('item', JSON.stringify(response));
-                // let lootItem = Loot.createLootItem(response);
                 overlay.style.opacity = 1;
 
                 setTimeout(function() {
-                    // let itemPage = document.getElementsByClassName('itemPage')[0];
-                    // itemPage.appendChild(lootItem);
-                    // colorItems();
                     window.location.href = "./view.html";
                 }, 1000);
                 

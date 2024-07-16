@@ -291,7 +291,6 @@ let font = await fontLoader.load('assets/font/volk.json');
 async function loadCardContent(card, item) {
     return new Promise((resolve, reject) => {
         let content = new THREE.Group();
-        let contentMaterial = new THREE.MeshStandardMaterial({ color: 0x000000, metalness: 1, roughness: 0.5 });
         let yOffset = 1.3; // Initial Y offset for text placement
         let maxWidth = item.image ? 4 : 3;
         let size = 0.1;
@@ -304,16 +303,15 @@ async function loadCardContent(card, item) {
 
         item = Object.keys(item)
             .sort((a, b) => {
-                // Check if one of the keys is 'description' and sort it last
-                if (a === 'description') return 1; // Always sort 'description' as greater
-                if (b === 'description') return -1; // Always sort 'description' as lesser
+                if (a === 'description') return 1; 
+                if (b === 'description') return -1;
 
                 const indexA = orderedKeys.indexOf(a);
                 const indexB = orderedKeys.indexOf(b);
-                if (indexA === -1 && indexB === -1) return 0; // Both keys are not in orderedKeys, keep their order
-                if (indexA === -1) return 1; // a is not in orderedKeys, sort b before a
-                if (indexB === -1) return -1; // b is not in orderedKeys, sort a before b
-                return indexA - indexB; // Both keys are in orderedKeys, sort by their order in orderedKeys
+                if (indexA === -1 && indexB === -1) return 0;
+                if (indexA === -1) return 1;
+                if (indexB === -1) return -1;
+                return indexA - indexB;
             })
             .reduce((obj, key) => {
                 obj[key] = item[key];
@@ -334,7 +332,7 @@ async function loadCardContent(card, item) {
             Object.entries(item).forEach(([key, value], index) => {
                 console.log(key);
                 if(key === 'nameHex' || key === 'rarityHex') {
-                    yOffset += 0.2; // Skip the name and rarity
+                    yOffset += 0.2;
                     return;
                 }
                 let skip = false;
@@ -361,12 +359,10 @@ async function loadCardContent(card, item) {
                     case 'materials':
                         skip = false;
                         colour = 0x000000;
-                        // value = key;
                         yOffset += 0.2;
                         break;
                     case 'enchantments':
                         skip = false;
-                        // value = key;
                         yOffset += 0.2;
                         break;
                     default:
@@ -402,9 +398,7 @@ async function loadCardContent(card, item) {
             
             });
 
-            console.log(content);
             content.updateMatrixWorld(true); // Force update of the world matrix
-
 
             const contentBoundingBox = new THREE.Box3().setFromObject(content);
             const contentSize = contentBoundingBox.getSize(new THREE.Vector3());
@@ -457,13 +451,12 @@ function wrapText(text, font, size, maxWidth) {
             currentLine = word;
         }
     }
-    lines.push(currentLine); // Add the last line
+    lines.push(currentLine);
 
     return lines;
 }
 
 function measureText(text, font, size) {
-    // Simplified text width calculation (you might need a more accurate method)
     let textGeom = new TextGeometry(text, {
         font: font,
         size: size,
