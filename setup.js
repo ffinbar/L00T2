@@ -292,7 +292,7 @@ For fields not specified by the user, use your creativity. Items can span any se
 Notes:
 - **Colors**: Use hex codes for name and rarity based on their levels. Only include nameHex and rarityHex.
 - **Materials & Enchantments**: Key-value pairs describing the item’s make and magic. Can be empty.
-- **Description**: Concisely detail what the item is and its purpose, avoiding repetition.
+- **Description**: Concisely detail what the item is and its purpose, avoiding repetition. Instead of reiterating existing info from the enchantments or materials, add new details such as lore, backstory, or visual elements.
 - **Random Strings**: Decode strings of '$' followed by random letters and numbers to generate unique names, e.g., "$0a7g7af7g9h01l" could be "Blungus Blade".
 The value of the random string should be interpreted into a unique output. The answer is hidden within the string, and it's up to you to find it.
 
@@ -470,7 +470,7 @@ nextBtn.addEventListener('click', async () => {
         const itemPrompt = item ? JSON.stringify(item) : null;
 
         const chatObj = {
-            model: 'gpt-3.5-turbo',
+            model: 'gpt-4o-mini',
             messages: [
                 { "role": "user", "content": lootPrompt},
                 { "role": "system", "content": "New L00T request recieved! The item fields provided are as follows:" },
@@ -489,7 +489,7 @@ nextBtn.addEventListener('click', async () => {
         };
 
         if(!shouldGenImg && itemImg) {
-            chatObj.model = 'gpt-4o';
+            chatObj.model = 'gpt-4o-mini';
             chatObj.messages.push({
                 role: 'user',
                 content: [
@@ -645,7 +645,7 @@ nextBtn.addEventListener('click', async () => {
 
             imageFileInput.addEventListener('change', async () => {
                 let file = imageFileInput.files[0];
-                downscaleImage(file, 256, 256, 0.8, function(downscaledFile) {
+                downscaleImage(file, 512, 512, 0.6, function(downscaledFile) {
                     console.log(file.size, downscaledFile.size);
                     let reader = new FileReader();
                     reader.readAsDataURL(downscaledFile);

@@ -6,7 +6,7 @@ RectAreaLightUniformsLib.init();
 import { RectAreaLightHelper } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/helpers/RectAreaLightHelper.js';
 import { EffectComposer } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/postprocessing/RenderPass.js';
-import { BokehPass } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/postprocessing/BokehPass.js';
+import { UnrealBloomPass } from './assets/TransparentBackgroundFixedUnrealBloomPass.js';
 // import { UnrealBloomPass } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutlinePass } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/postprocessing/OutlinePass.js';
 import { FontLoader } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/loaders/FontLoader.js';
@@ -20,7 +20,9 @@ import Stats from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/libs/stats.mo
 
 let scene = new THREE.Scene();
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-
+camera.near = 0.1
+camera.far = 100;
+camera.updateProjectionMatrix();
 
 window.onresize = function () {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -55,17 +57,22 @@ let renderPass = new RenderPass(scene, camera);
 composer.addPass(renderPass);
 
 
-// let bloomPass = new BloomPass(1, 12, 4);
-// composer.addPass(bloomPass);
+let bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight));
+bloomPass.strength = 3;
+bloomPass.radius = 1;
+bloomPass.threshold = 1;
+
+composer.addPass(bloomPass);
 
 
 let outlinePass = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
 composer.addPass(outlinePass);
 outlinePass.edgeStrength = 5;
 outlinePass.edgeGlow = 5;
-outlinePass.edgeThickness = 10;
-outlinePass.resolution.set(window.innerWidth/2, window.innerHeight/2);
+outlinePass.edgeThickness = 5;
+outlinePass.pulsePeriod = 10;
 
+outlinePass.resolution.set(window.innerWidth/2, window.innerHeight/2);
 let outputPass = new OutputPass();
 composer.addPass(outputPass);
 
@@ -95,11 +102,11 @@ controls.enableZoom = true;
 
 scene.add(camera); 
 
-let camLight = new THREE.PointLight(0xffffff, 15, 100);
-camLight.position.set(0, 0, 0);
+let camLight = new THREE.SpotLight(0xffffff, 2, 10, Math.PI / 2, 0);
+camLight.position.set(2, 3, 0);
 camLight.castShadow = false;
 
-camera.add(camLight);
+// camera.add(camLight);
 
 // let titleArea = new THREE.RectAreaLight(0xffffff, .5, 1, 2);
 // titleArea.intensity = 3;
@@ -129,29 +136,33 @@ backLight3.lookAt(0, 0, 0);
 // scene.add(backLight3);
 
 
-let sideLight = new THREE.SpotLight(0xffffff, 5, 10, 10, 0, 1);
+let sideLight = new THREE.SpotLight(0xffffff, 10, 10, 10, 0, 1);
 sideLight.castShadow = true;
 // sideLight.intensity = 4;
-sideLight.position.set(1, -2, 3 );
+sideLight.position.set(2, -4, 1 );
 sideLight.rotation.set(0, -Math.PI / 2, 0);
 sideLight.lookAt(0, 0, 0);
-scene.add(sideLight);
+sideLight.shadow.bias = -0.0001;
+sideLight.shadow.mapSize.width = 1024;
+sideLight.shadow.mapSize.height = 1024;
 
-let sideLight2 = new THREE.SpotLight(0xffffff, 5, 10, 15, 0, 1);
+let sideLight2 = new THREE.SpotLight(0xffffff, 10, 10, 15, 0, 1);
 sideLight2.castShadow = true;
 // sideLight2.intensity = 4;
-sideLight2.position.set(-2, 2, 2);
+sideLight2.position.set(-2, 4, 1);
 sideLight2.rotation.set(0, -Math.PI / 2, 0);
 sideLight2.lookAt(0, 0, 0);
-scene.add(sideLight2);
+sideLight2.shadow.bias = -0.0001;
+sideLight2.shadow.mapSize.width = 1024;
+sideLight2.shadow.mapSize.height = 1024;
 
 let point1 = new THREE.PointLight(0xffffff, 10, 100);
 point1.position.set(2, 2, 1.5);
-scene.add(point1);
+// scene.add(point1);
 
 let point2 = new THREE.PointLight(0xffffff, 10, 100);
 point2.position.set(-2, -2, 1.5);
-scene.add(point2);
+// scene.add(point2);
 
 // let areaHelper = new RectAreaLightHelper(titleArea);
 let backHelper = new THREE.SpotLightHelper(backLight2);
@@ -178,18 +189,42 @@ let l00t = null;
 // floor.receiveShadow = true;
 // scene.add(floor);
 
+function invertColour(hex) {
+    // Extract RGB components from the hex string
+    let r = parseInt(hex.slice(1, 3), 16);
+    let g = parseInt(hex.slice(3, 5), 16);
+    let b = parseInt(hex.slice(5, 7), 16);
+
+    // Invert the RGB components
+    let invertedR = 255 - r;
+    let invertedG = 255 - g;
+    let invertedB = 255 - b;
+
+    // Convert the inverted RGB components back to a hex string
+    let invertedColour = "#" + ((1 << 24) + (invertedR << 16) + (invertedG << 8) + invertedB).toString(16).slice(1);
+    return invertedColour;
+}
+
 let borderMaterial;
 
 async function createCard() {
 
     let card = new THREE.Group();
 
+    const roughnessMapTexture = new THREE.TextureLoader().load('assets/ice.jpg');
+    roughnessMapTexture.needsUpdate = true;
+
+    const borderRoughnessMapTexture = new THREE.TextureLoader().load('assets/roughness3.jpg');
+    borderRoughnessMapTexture.needsUpdate = true;
+
     borderMaterial = new THREE.MeshStandardMaterial({
         color: item.rarityHex,
         metalness: 1,
-        roughness: 0.4,
+        roughness: 7,
+        roughnessMap: borderRoughnessMapTexture
     });
 
+   
     card.content = await loadCardContent(card, item);
     console.log(item.imageObj);
     card.add(card.content);
@@ -202,10 +237,15 @@ async function createCard() {
     canvas.width = 256;
     canvas.height = 256;
 
+    let originalRarity = item.rarityHex;
+    let originalName = item.nameHex;
+    let invertedRarity = invertColour(originalRarity);
+    let invertedName = invertColour(originalName);
+    
     let gradient = context.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, item.rarityHex);
-    gradient.addColorStop(0.5, item.nameHex);
-    gradient.addColorStop(1, item.rarityHex);
+    gradient.addColorStop(0, invertedName);
+    gradient.addColorStop(0.5, invertedRarity);
+    gradient.addColorStop(1, invertedName);
 
     context.fillStyle = gradient;
     context.fillRect(0, 0, canvas.width, canvas.height);
@@ -213,7 +253,12 @@ async function createCard() {
     const texture = new THREE.Texture(canvas);
     texture.needsUpdate = true;
 
-    let material = new THREE.MeshStandardMaterial({ map: texture });
+    let material = new THREE.MeshStandardMaterial({
+        map: texture,
+        metalness: 1,
+        roughness: 4,
+        roughnessMap: roughnessMapTexture
+    });
 
     let cardGeom = new RoundedBoxGeometry(card.content.contentSize.x + 0.4, card.content.contentSize.y + 0.4, .1, 2, 1);
     let cardBackground = new THREE.Mesh(cardGeom, material);
@@ -223,18 +268,27 @@ async function createCard() {
     // Create a slightly larger geometry for the border
     let borderGeom = new RoundedBoxGeometry(card.content.contentSize.x + 0.6, card.content.contentSize.y + 0.6, .1, 2, 1); // Slightly larger and thicker
     let border = new THREE.Mesh(borderGeom, borderMaterial);
-    border.castShadow = true;
-    border.receiveShadow = true;
+    border.castShadow = false;
+    border.receiveShadow = false;
     border.position.z = -0.05;
 
     let backsideBackground = new THREE.Mesh(cardGeom, new THREE.MeshStandardMaterial({ color: 0x5f1e24, metalness: 1, roughness: 0.6 }));
     backsideBackground.position.z = -0.06;
+    // textOutline.selectedObjects.push(backsideBackground);
 
     let backgroundGroup = new THREE.Group();
     backgroundGroup.add(cardBackground);
     backgroundGroup.add(border);
     backgroundGroup.add(backsideBackground);
     card.add(backgroundGroup);
+
+    card.add(sideLight);
+    card.add(sideLight2);
+
+    sideLight.position.y = -(card.content.contentSize.y / 2) - 3;
+    // sideHelper.update();
+    sideLight2.position.y = (card.content.contentSize.y / 2) + 3;
+    // sideHelper2.update();
 
     // let floorOffset = -card.content.contentSize.y / 2 - 0.5;
     // floor.position.y = floorOffset > -4 ? -4 : floorOffset;
@@ -247,8 +301,9 @@ async function createCard() {
 
     card.background = backgroundGroup;
 
-    // outlinePass.selectedObjects.push(border);
-    // outlinePass.visibleEdgeColor = new THREE.Color(item.rarityHex);
+    outlinePass.selectedObjects.push(border);
+    outlinePass.visibleEdgeColor = new THREE.Color(item.rarityHex);
+    outlinePass.hiddenEdgeColor = new THREE.Color(item.rarityHex);
 
     loader.load('assets/loothdPerf3.glb', function (gltf) {
         l00t = gltf.scene;
@@ -294,7 +349,7 @@ async function loadCardContent(card, item) {
         let yOffset = 1.3; // Initial Y offset for text placement
         let maxWidth = item.image ? 4 : 3;
         let size = 0.1;
-        let colour = 0x000000;
+        let colour = 0xffffff;
         let lh = 0.1;
 
         // we need these keys to be in a specific order
@@ -358,7 +413,7 @@ async function loadCardContent(card, item) {
                         break;
                     case 'materials':
                         skip = false;
-                        colour = 0x000000;
+                        colour = 0xffffff;
                         yOffset += 0.2;
                         break;
                     case 'enchantments':
@@ -367,7 +422,7 @@ async function loadCardContent(card, item) {
                         break;
                     default:
                         size = 0.12;
-                        colour = 0x000000;
+                        colour = 0xffffff;
                         skip = false;
                         break;
                 }   
@@ -387,7 +442,7 @@ async function loadCardContent(card, item) {
 
                             let textLines = wrapText(`${capitalize(innerValue)}`, font, 0.1, maxWidth);
                             textLines.forEach((line, i) => {
-                                buildText(line, 0x000000, content, yOffset, index, i, font, 0.1, 0.1, -0.8);
+                                buildText(line, 0xffffff, content, yOffset, index, i, font, 0.1, 0.1, -0.8);
                             });
                             yOffset -= 0.2 * textLines.length;
                         });
@@ -410,6 +465,9 @@ async function loadCardContent(card, item) {
 
             content.position.set(-contentCenter.x, -contentCenter.y, 0);
 
+            let originalColour = item.rarityHex.replace('#', '0x');
+            let invertedColour = 0xffffff - originalColour;
+
             resolve(content);
         });
         
@@ -428,11 +486,14 @@ function buildText(text, colour, content, yOffset, index, lineIndex, font, size 
     });
     let baseLineHeight = lh;
     let lineHeight = baseLineHeight + size;
-    let material = new THREE.MeshStandardMaterial({ color: colour, metalness: .5, roughness: 0.5 });
+    let material = new THREE.MeshStandardMaterial({ color: colour, metalness: 1, roughness: 0.8 });
+    material.emissive = new THREE.Color(colour);
+    material.emissiveIntensity = .8;
     let textMesh = new THREE.Mesh(textGeom, material);
     textMesh.castShadow = true;
     textMesh.position.set(xOffset, yOffset - (index * lineHeight) - (lineIndex * lineHeight), .05); // Adjust position as needed
     content.add(textMesh);
+    // textOutline.selectedObjects.push(textMesh);
 }
 
 function wrapText(text, font, size, maxWidth) {
@@ -518,6 +579,7 @@ async function captureCameraView() {
     let random = (Math.random() * 0.5) - 0.25;
 
     let quaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, random, 0, 'XYZ'));
+    console.log(quaternion);
     card.quaternion.copy(quaternion);
 
     console.log(camera.position);
