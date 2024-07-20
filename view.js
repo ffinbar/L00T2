@@ -119,7 +119,6 @@ backLight.castShadow = true;
 // backLight.intensity = 4;
 backLight.position.set(0, 0, -3);
 backLight.lookAt(0, 0, 0);
-scene.add(backLight);
 
 let backLight2 = new THREE.SpotLight(0xffffff, 5, 10, 10, 0, 1);
 backLight2.castShadow = true;
@@ -284,6 +283,7 @@ async function createCard() {
 
     card.add(sideLight);
     card.add(sideLight2);
+    card.add(backLight);
 
     sideLight.position.y = -(card.content.contentSize.y / 2) - 3;
     // sideHelper.update();
