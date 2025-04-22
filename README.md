@@ -5,3 +5,6 @@ It uses [Three.js](https://www.github.com/mrdoob/three.js) to display these card
 ### Demo
 
 A live demo is available [here on finis.cool](https://www.finis.cool/l00t2).
+
+### More Information
+For a detailed writeup on how this was made, there is a blog post about it [here](https://blog.finis.cool/#l00t).
